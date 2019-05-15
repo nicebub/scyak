@@ -1,0 +1,44 @@
+#include <sys/types.h>
+#include <stdio.h>
+#include <assert.h>
+
+typedef u_int64_t ascii_array[2];
+
+void set_bit_at_position(ascii_array* in_array, int pos);
+
+struct atype_s {
+	ascii_array a_array;
+	void (*a_init)(ascii_array* in_array);
+
+} atype;
+
+void a_init(ascii_array* in_array);
+
+#ifndef DEBUG
+int main(int argc, const char **argv){
+	struct atype_s my_first;
+	my_first.a_array[0] = 5;
+	printf("my_first: %llu\n",my_first.a_array[0]);
+		my_first.a_init = (a_init);
+	printf("my_first: %llu\n",my_first.a_array[0]);
+	my_first.a_init(&(my_first.a_array));
+	printf("my_first: %llu\n",my_first.a_array[0]);
+}
+#endif
+
+
+
+
+void a_init(ascii_array* in_array){
+	printf("initing\n");
+	*(in_array[0]) = 0;
+	*(in_array[1]) = 0;
+}
+
+void set_bit_at_position(ascii_array* in_array, int pos){
+	assert(pos > -1 && pos < 128);
+	if(pos > 63){
+		pos = pos - 64;
+//		*in_array[1] &=
+	}
+}
