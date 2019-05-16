@@ -44,7 +44,7 @@ void add_symb_to_rule(rule_t* rule,symb_t * symbol){
 			rule->symbols = realloc(rule->symbols,sizeof(symb_t*)
 				*(rule->num_symbs+20));
 			rule->num_symbs += 20;
-			for(int i=rule->used;i<rule->num_symbs;i++)
+			for(size_t i=rule->used;i<rule->num_symbs;i++)
 				rule->symbols[i] = NULL;
 		}
 		rule->symbols[rule->used] = symbol;
@@ -75,7 +75,7 @@ void print_symbol(symb_t * symbol){
 		printf("NULL SYMBOL\n");
 		return;
 	}
-	printf("Symbol--Name:%s tok_val: %d attribs max: %d \n",symbol->name,
+    printf("Symbol--Name:%s tok_val: %d attribs max: %zu \n",symbol->name,
 				symbol->val,symbol->num_attribs);
 	return;
 }
@@ -84,7 +84,7 @@ void print_rule(rule_t* rule){
 		printf("NULL RULE\n");
 		return;
 	}
-	printf("Rule--#symbs used: %d symb max: %d\n",rule->used, rule->num_symbs);
+    printf("Rule--#symbs used: %zu symb max: %zu\n",rule->used, rule->num_symbs);
 	for(int i=0;i<rule->used;i++){
 		printf("Symbol %d: ", i);
 		print_symbol((rule->symbols[i]));
@@ -97,7 +97,7 @@ void add_rule_to_table(gr_tbl_t * table, rule_t* rule){
 		printf("need more memory for rules, extdending if possible\n");
 		table->rules = realloc(table->rules,sizeof(rule_t*)
 			*(table->num_ruls+20));
-		for(int i=table->used;i<table->num_ruls+20;i++)
+		for(size_t i=table->used;i<table->num_ruls+20;i++)
 			table->rules[i] = NULL;
 		table->num_ruls += 20;
 	}
@@ -129,7 +129,7 @@ void print_gr_table(gr_tbl_t * table){
 }
 
 
-#ifdef DEBUG
+#ifdef DEBUGA
 int main(int argc, char const ** argv){
 	create_dyn_tok_tbl(ttable,10);
 	create_rules_array(mrules,30);

@@ -69,7 +69,7 @@ void add_item_to_set(struct lr0_set* lrset, struct lr0_item* lritem){
 	}
 	if(lrset->used >= lrset->num_items-1){
 		lrset->items = realloc(lrset->items,sizeof(struct lr0_item*)*(lrset->num_items+10));
-		for(int i=lrset->used;i<lrset->num_items+10;i++)
+		for(size_t i=lrset->used;i<lrset->num_items+10;i++)
 			lrset->items[i]=NULL;
 		lrset->num_items += 10;
 	}
@@ -90,9 +90,11 @@ void add_set_to_array(struct lr0_array_set* array, struct lr0_set* lrset){
 		return;
 	}
 	if(array->used >= array->num_sets-1){
+	    printf("need more memory for array using realloc\n");
 		array->array = realloc(array->array,sizeof(struct lr0_set*)*(array->num_sets+10));
-		for(int i=array->used;i<array->num_sets+10;i++)
+		for(size_t i=array->used;i<array->num_sets+10;i++)
 			array->array[i]=NULL;
+	    array->num_sets +=10;
 	}
 	array->array[array->used] = lrset;
 	array->used++;

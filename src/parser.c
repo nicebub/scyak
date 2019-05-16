@@ -33,7 +33,7 @@ extern char sctext[];
 #define create_code_token() \
 			char* codenum; \
 			codenum = malloc(sizeof(char)*(3)); \
-			sprintf(codenum,"%d",num_code_sects); \
+			sprintf(codenum,"%zu",num_code_sects); \
 			num_code_sects++; \
 			temp_tok_nam = malloc(sizeof(char)*strlen(codenum)+3); \
 			sprintf(temp_tok_nam,"cs%s",codenum); \
@@ -165,7 +165,7 @@ int definition(FILE* specfile){
 		case START: /* %start */ 
 			next_token();
 			if(current_tok != IDENT){
-				printf("expecting Identifer after %start\n");
+				printf("expecting Identifer after %%start\n");
 				exit(EXIT_FAILURE);
 			}
 			printf("Definition: %%start %s\n",cur_text);
@@ -242,7 +242,7 @@ int optional_tag(FILE* specfile){
 		return RETVAL;
 }
 int ident_list(FILE* specfile){
-	char aa;
+//	char aa;
 	while(current_tok != MARK){ /* replace with input token != MARK '%% */
 combo:		identcombo(specfile);
 		switch(current_tok){
@@ -378,6 +378,9 @@ int rulebody(FILE* specfile, rule_t* temp_rules){
 			case ORSYMB:
 				goto endrbody;
 				break;
+		    case RCBRA:
+			   goto outside;
+			   break;
 			case IDENT:  /* IDENTIFIER */
 				create_token(cur_text,current_tok,TERMINAL,1);
 				add_symb_to_rule(temp_rules,create_symb(temp_tok_nam,new_tok_val));
@@ -401,6 +404,7 @@ int rulebody(FILE* specfile, rule_t* temp_rules){
 						exit(EXIT_FAILURE); 
 						break; /* error, nothing else expected */
 		}
+	outside:
 		if((current_tok != MARK) || (current_tok != EOF))
 			next_token();
 	}

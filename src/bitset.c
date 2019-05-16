@@ -34,7 +34,7 @@ enum {
 	LOWF, LOWG, LOWH, LOWI, LOWJ, LOWK, LOWL, LOWM, LOWN, LOWO, LOWP, LOWQ, LOWR,
 	LOWS, LOWT, LOWU, LOWV, LOWW, LOWX, LOWY, LOWZ, LCBCK, VBAR, RCBCK, TILD, DEL
 };
-const static char ascii_vals[] = { '\0', 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, '\t', '\n',
+/*const static char ascii_vals[] = { '\0', 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, '\t', '\n',
 0xB, '\f', 0xD, 0xE, 0xF, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A,
 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, ' ', '!', '\"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', '\1', '-', '.', '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ':', ';', '<',
 '=', '>', '?', '@', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q',
@@ -42,9 +42,9 @@ const static char ascii_vals[] = { '\0', 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8,
 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's',
 't', 'u', 'v', 'w', 'x', 'y', 'z', '{', '|', '}', '~', '\1', '\0'
 };
-
+*/
 #define BITS_TO_USE 128
-#ifdef DEBUG
+#ifdef DEBUGA
 int main(int argc, const char* argv[]){
 	
 	u_int64_t bitarray[bits_take_up(BITS_TO_USE)];

@@ -17,7 +17,7 @@ struct lr0_set* create_universe_lr0_set(gr_tbl_t* grammar_table){
 			for(j=0;j<grammar_table->rules[i]->used;j++){
 				add_item_to_set(new_set,create_lr0_item(i,j,grammar_table->rules[i]->symbols[j]));
 			}
-			printf("checking j %d and used %d\n",j,grammar_table->rules[i]->used);
+		    printf("checking j %d and used %zu\n",j,grammar_table->rules[i]->used);
 			add_item_to_set(new_set,create_lr0_item(i,j,
 				create_symb(grammar_table->tokens[1].name,1)));
 		}
@@ -108,7 +108,7 @@ struct lr0_array_set* items(gr_tbl_t* grammar_table) {
 	struct lr0_array_set* C;
 	struct lr0_set* initial_set;
 	struct lr0_set* got_set;
-	struct lr0_set* clos_got_set;
+//	struct lr0_set* clos_got_set;
 	C = create_lr0_array(20);
 	int made_changes;
 	made_changes = 1;
@@ -232,7 +232,7 @@ struct lr0_set* FIRST(tok_tbl_t* token, struct lr0_set* universe, gr_tbl_t* in_g
 	
 }
 struct lr0_set* FOLLOW(struct lr0_set* inset, struct lr0_set* universe, gr_tbl_t* in_gr_table){
-	
+    return NULL;
 }
 
 void get_first_set(struct lr0_array_set* canon,gr_tbl_t* grammar_table){
