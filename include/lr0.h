@@ -9,6 +9,7 @@ struct lr0_item
 	uint8_t rule;
 	uint8_t pos;
 	symb_t* symbol;
+    tok_tbl_t* token;
 };
 
 /* set of above lr(0) items and how many allocated and used */

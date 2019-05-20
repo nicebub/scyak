@@ -7,6 +7,7 @@
 int process_token(tok_tbl_t **intable, char tok_val,
 				char* tok_name,u_int8_t type,int pos,gr_tbl_t *grammar_table);
 int tok_exists(tok_tbl_t *intable, char* name,gr_tbl_t *grammar_table);
+int does_tok_start_rul(tok_tbl_t* token, gr_tbl_t* in_gr_table);
 
 
 

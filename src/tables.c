@@ -8,6 +8,7 @@ symb_t * create_symb(char* name,tok_tab_t val){
 	temp = malloc(sizeof(symb_t));
 	temp->name = name;
 	temp->val = val;
+    	temp->tval = -1;
 	temp->num_attribs = 0;
 	temp->attribs = NULL;
 	return temp;
@@ -21,6 +22,7 @@ symb_t* copy_symb(symb_t* in_symb){
 	strncpy(out_symb->name,in_symb->name,strlen(in_symb->name)+1);
 	out_symb->val = in_symb->val;
 	out_symb->num_attribs = in_symb->num_attribs;
+    	out_symb->tval = in_symb->tval;
 //	out_symb->attribs = copy_attribs(in_symb->attribs);
 	return out_symb;
 }
@@ -36,7 +38,14 @@ rule_t * create_grrul(char* name, size_t size){
 	return temp;
 	
 }
-
+void set_tok_tval(tok_tbl_t* in_token, size_t val){
+    if(!in_token) return;
+    in_token->tval = val;
+}
+void set_symb_tval(symb_t* intable, size_t val){
+    if(!intable) return;
+    intable->tval = val;
+}
 void add_symb_to_rule(rule_t* rule,symb_t * symbol){
 	if(rule && symbol){
 		if(rule->used == rule->num_symbs-1){
@@ -114,12 +123,32 @@ gr_tbl_t * create_grtbl(char* name,size_t size){
 	table->used = 0;
 	table->tokused = 0;
 	table->num_toks = 0;
+    	table->num_terms = 0;
+    	table->num_nonterms = 0;
 	table->tokens = NULL;
 	return table;
 }
 /*tok_tbl_t * create_tok_tbl(char * name,size_t size){
 	
 }*/
+
+void calculate_num_terms(gr_tbl_t * grammar_table){
+    if(!grammar_table) return;
+    for(int i=2;i<grammar_table->tokused;i++){
+	   if(grammar_table->tokens[i].type == TERMINAL){
+		  grammar_table->tokens[i].termnum = grammar_table->num_terms++;
+		  printf("set terminal %s to term num %zu\n",grammar_table->tokens[i].name,grammar_table->tokens[i].termnum);
+//		  grammar_table->num_terms++;
+	   }
+	   else{
+		  grammar_table->tokens[i].termnum = grammar_table->num_nonterms++;
+		  printf("set nonterminal %s to nonterm num %zu\n",grammar_table->tokens[i].name,grammar_table->tokens[i].termnum);
+//		  grammar_table->num_nonterms++;
+	   }
+    }
+    printf("IN this table, found %zu terminals and %zu nonterminals\n",grammar_table->num_terms,grammar_table->num_nonterms);
+}
+
 void print_gr_table(gr_tbl_t * table){
 	if(table == NULL){ printf("Empty Table\n"); return;}
 	for(int i=0;i<table->used;i++){

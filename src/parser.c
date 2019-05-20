@@ -19,16 +19,23 @@ extern char sctext[];
 
 #define first_rule_length 2
 
+#define ini_tok_name(name,...) \
+	temp_tok_nam = malloc(sizeof(char)*(strlen(name)__VA_ARGS__)); \
+	strncpy(temp_tok_nam,name,strlen(name)__VA_ARGS__)
+
+#define process_n_set_tval(tokid,type,pos) \
+	new_tok_val = process_token(&tokens, tokid,temp_tok_nam,type,pos,grammar_table); \
+	set_tok_tval(&(grammar_table->tokens[new_tok_val]),new_tok_val); \
+	printf("newtokval:%d\n",new_tok_val)
+
 #define create_token(name,tokid,type,pos) 	\
-	temp_tok_nam = malloc(sizeof(char)*(strlen(name)+1)); \
-	strncpy(temp_tok_nam,name,strlen(name)+1); \
-	new_tok_val = process_token(&tokens,tokid,temp_tok_nam,type,pos,grammar_table)
+	ini_tok_name(name,+1); \
+	process_n_set_tval(tokid,type,pos)
 
 #define create_token_minus_1(name,tokid,type,pos)  \
-		temp_tok_nam = malloc(sizeof(char)*(strlen(name))); \
-		strncpy(temp_tok_nam,name,strlen(name)); \
-		temp_tok_nam[strlen(name)-1] ='\0'; \
-		new_tok_val = process_token(&tokens, tokid,temp_tok_nam,type,pos,grammar_table)
+	ini_tok_name(name); \
+	temp_tok_nam[strlen(name)-1] ='\0'; \
+	process_n_set_tval(tokid,type,pos)
 
 #define create_code_token() \
 			char* codenum; \
@@ -39,7 +46,7 @@ extern char sctext[];
 			sprintf(temp_tok_nam,"cs%s",codenum); \
 			free(codenum); \
 			codenum=NULL; \
-			new_tok_val = process_token(&tokens, CODE,temp_tok_nam,NONTERMINAL,1,grammar_table)
+			process_n_set_tval(CODE,TERMINAL,1)
 
 #define add_token_decls() 	tok_tbl_t * tokens; \
 							char* temp_tok_nam; \
@@ -54,13 +61,16 @@ extern char sctext[];
 
 #define generate_rule(rnm,rln) \
 							temp_rules = create_grrul(rnm,rln); \
-							add_symb_to_rule(temp_rules,create_symb(temp_tok_nam,new_tok_val))
+							symb_t* temp_sym = create_symb(temp_tok_nam,new_tok_val);\
+							temp_sym->tval = new_tok_val; \
+							add_symb_to_rule(temp_rules,temp_sym)
 
 #define run_g_rul_body() \
 							generate_rule("rule",INIT_GR_RULES_SIZE); \
 							add_rule_to_table(grammar_table,temp_rules); \
 							print_gr_table(grammar_table); \
 							next_token(); \
+							check_for_empty_rule(temp_rules);\
 							rulebody(specfile,temp_rules); \
 							optional_precision(specfile,temp_rules)
 								
@@ -73,7 +83,9 @@ extern char sctext[];
 							if(current_tok == RCBRA){ \
 								printf("found } end of code\n"); \
 								create_code_token(); \
-								add_symb_to_rule(temp_rules,create_symb(temp_tok_nam,new_tok_val)); \
+							 	symb_t* temp_sym = create_symb(temp_tok_nam,new_tok_val);\
+								temp_sym->tval = new_tok_val; \
+								add_symb_to_rule(temp_rules,temp_sym); \
 								print_gr_table(grammar_table); \
 							} \
 
@@ -83,6 +95,7 @@ size_t num_code_sects;
 /* Function Definitions */
 void read_and_parse_specfile(FILE* specfile){
 	struct lr0_array_set* canon;
+    	struct parser_tables_s* ptables;
 	grammar_table = create_grtbl("",INIT_GR_TABLE_SIZE);
 	add_token_decls();
 	add_rule_decls();
@@ -116,10 +129,12 @@ void read_and_parse_specfile(FILE* specfile){
 	grammar_rules(specfile);
 	
 	add_symb_to_rule(grammar_table->rules[0],grammar_table->rules[1]->symbols[0]);
-	
-	canon = items(grammar_table);
-	get_first_set(canon,grammar_table);
-	get_follow_set(canon,grammar_table);
+    	calculate_num_terms(grammar_table);
+    	canon = items(grammar_table);
+    	ptables = create_action_n_goto_tbls(canon,grammar_table);
+    	fill_action_table(ptables,grammar_table,canon);
+//	get_first_set(canon,grammar_table);
+//	get_follow_set(canon,grammar_table);
 	optional_auxillary(specfile);
 	printf("done reading specfile\n");
 }
@@ -383,8 +398,10 @@ int rulebody(FILE* specfile, rule_t* temp_rules){
 			   break;
 			case IDENT:  /* IDENTIFIER */
 				create_token(cur_text,current_tok,TERMINAL,1);
-				add_symb_to_rule(temp_rules,create_symb(temp_tok_nam,new_tok_val));
-				print_gr_table(grammar_table);			
+			   	symb_t* temp_sym = create_symb(temp_tok_nam,new_tok_val);
+			   	temp_sym->tval = new_tok_val;
+			   	add_symb_to_rule(temp_rules,temp_sym);
+				print_gr_table(grammar_table);
 				 break;
 			case LCBRA: 
 						process_codeblock() /*  a ';' will cause error with next
@@ -457,37 +474,23 @@ int optional_precision(FILE* specfile,rule_t* temp_rules){
 	endop:
 	return RETVAL;
 }
-/*
-int process_token(tok_tbl_t **intable, char val, char* nam,u_int8_t type,int pos){
-	size_t *num_toks;
-	num_toks = &(grammar_table->tokused);
-	int temp_tok = tok_exists(*intable,nam);
-	if(temp_tok == -1){
-		set_tok_name(*intable,*num_toks,nam);
-		set_tok_val(*intable,*num_toks,val);
-		set_tok_type(*intable,*num_toks,type);
-		*num_toks += 1;
-		return *num_toks-1;
-	}
-	else if(!pos){
-			set_tok_type(*intable,temp_tok,NONTERMINAL);
-		}
-	
-	return temp_tok;
-}
 
-int tok_exists(tok_tbl_t *intable, char* nam){
-	size_t *num_toks;
-	num_toks = &(grammar_table->tokused);
-	for(int i=0;i<*num_toks;i++){
-		if(!(strcmp(intable[i].name,nam))){
-			printf("old token\n");
-			return i;
-		}
-	}
-	if(!(*num_toks))
-		printf("first token\n");
-	else
-		printf("new token\n");
-	return -1;
-}*/
+inline void check_for_empty_rule(rule_t* inrule){
+    add_token_decls();
+    add_rule_decls();
+    
+    switch(current_tok){
+	   case ORSYMB:
+	   case LCBRA:
+	   case SEMICOLON:
+		  	printf("found an empty rule!! yay\n");
+		  	create_token("{e}",EMPTY,TERMINAL,1);
+		  	symb_t* temp_sym = create_symb(temp_tok_nam,new_tok_val);
+		  	temp_sym->tval = new_tok_val;
+		  	add_symb_to_rule(inrule,temp_sym);
+	//	  print_rule(inrule);
+		  	break;
+	   default:
+		  break;
+    }
+}

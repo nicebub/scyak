@@ -1,7 +1,7 @@
 #ifndef TOKENS_H
 #define TOKENS_H
 
-#define REALSTART 1 	// NON-TERMINAL
+#define REALSTART -1 	// NON-TERMINAL
 #define C_IDENT 2 		// NON-TERMINAL
 #define IDENT 3 		// TERMINAL
 #define LCBRA 4			// TERMINAL
@@ -27,6 +27,7 @@
 #define TOKEN 24	 	// NON-TERMINAL
 #define CODE 25	 		// NON-TERMINAL
 #define SEMICOLON 26 	// TERMINAL
-#define EMPTY -1
+#define EMPTY 1
+#define DOLLAR '$'
 
 #endif

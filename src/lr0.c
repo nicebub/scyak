@@ -7,6 +7,7 @@ struct lr0_item* create_lr0_item(uint8_t rule ,uint8_t pos,symb_t* symbol){
 	it->rule = rule;
 	it->pos = pos;
 	it->symbol = symbol;
+    	it->token = NULL;
 	return it;
 }
 
@@ -18,6 +19,7 @@ struct lr0_item* copy_lr0_item(struct lr0_item* in_item){
 	out_item->rule = in_item->rule;
 	out_item->pos = in_item->pos;
 	out_item->symbol = copy_symb(in_item->symbol);
+    	out_item->token = in_item->token;
 	return out_item;
 }
 
@@ -89,7 +91,7 @@ void add_set_to_array(struct lr0_array_set* array, struct lr0_set* lrset){
 		printf("either array or set is NULL\n");
 		return;
 	}
-	if(array->used >= array->num_sets-1){
+	if(array->used > array->num_sets-1){
 	    printf("need more memory for array using realloc\n");
 		array->array = realloc(array->array,sizeof(struct lr0_set*)*(array->num_sets+10));
 		for(size_t i=array->used;i<array->num_sets+10;i++)
@@ -102,11 +104,11 @@ void add_set_to_array(struct lr0_array_set* array, struct lr0_set* lrset){
 
 int set_is_in_array(struct lr0_set* inset, struct lr0_array_set* inarray){
 	for(int i=0;i<inarray->used;i++){
-		printf("i:%d\n",i);
+//		printf("i:%d\n",i);
 		if(sets_are_equal(inarray->array[i],inset))
-			return 1;
+			return i;
 	}
-	return 0;
+	return -1;
 }
 int sets_are_equal(struct lr0_set* set1, struct lr0_set* set2){
 	int found_item;

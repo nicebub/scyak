@@ -24,11 +24,24 @@ int process_token(tok_tbl_t **intable, char val, char* nam,u_int8_t type,int pos
 		*num_toks += 1;
 		return (int)*num_toks-1;
 	}
-	else if(!pos){
+	else{
+	    printf("token value processing %d\n",temp_tok);
+	    if(!pos|| does_tok_start_rul(&(*intable)[temp_tok],grammar_table)){
 			set_tok_type(*intable,temp_tok,NONTERMINAL);
 		}
-	
+	    
+	}
 	return temp_tok;
+}
+
+int does_tok_start_rul(tok_tbl_t* token, gr_tbl_t* in_gr_table){
+    if(!token || !in_gr_table) return 0;
+    for(int i=0;i<in_gr_table->used;i++){
+	   if(in_gr_table->rules[i]->symbols[0]->tval == token->tval){
+		  return 1;
+	   }
+    }
+    return 0;
 }
 
 int tok_exists(tok_tbl_t *intable, char* nam,gr_tbl_t *grammar_table){
@@ -36,13 +49,17 @@ int tok_exists(tok_tbl_t *intable, char* nam,gr_tbl_t *grammar_table){
 	num_toks = &(grammar_table->tokused);
 	for(int i=0;i<*num_toks;i++){
 		if(!(strcmp(intable[i].name,nam))){
+#ifdef debug_print
 			printf("old token\n");
-			return i;
+#endif
+		    return i;
 		}
 	}
+#ifdef debug_print
 	if(!(*num_toks))
 		printf("first token\n");
 	else
 		printf("new token\n");
-	return -1;
+#endif
+    return -1;
 }

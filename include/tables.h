@@ -22,6 +22,8 @@ struct attribute_s
 	tok_tab_t * name;
 	tok_tab_t val;
 	u_int8_t type;
+    	size_t tval;
+    	size_t termnum;
 };
 
 #define attr_t struct attribute_s
@@ -33,6 +35,7 @@ struct symbol_s
 	attr_t * attribs; /* array of attribute structs */
 	tok_tab_t * name;
 	tok_tab_t val;
+    	size_t tval;
 };
 
 #define symb_t struct symbol_s
@@ -54,6 +57,8 @@ struct table_s
 	size_t used;
 	size_t num_toks;
 	size_t tokused;
+    	size_t num_terms;
+    	size_t num_nonterms;
 	rule_t ** rules;
 	tok_tbl_t* tokens;
 };
@@ -90,10 +95,14 @@ symb_t * create_symb(char* name, tok_tab_t val);
 rule_t * create_grrul(char* name, size_t size);
 gr_tbl_t * create_grtbl(char* name,size_t size);
 
+void set_tok_tval(tok_tbl_t* in_token, size_t val);
+void set_symb_tval(symb_t* in_symb, size_t val);
 symb_t* copy_symb(symb_t* in_symb);
 
 void add_symb_to_rule(rule_t* rule,symb_t * symbol);
 void add_rule_to_table(gr_tbl_t * table, rule_t* rule);
+
+void calculate_num_terms(gr_tbl_t* grammar_table);
 
 void print_tok(tok_tbl_t* intok);
 void print_tok_array(tok_tbl_t* inarray,size_t used);
