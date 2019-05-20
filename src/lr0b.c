@@ -592,7 +592,7 @@ void fill_action_table(struct parser_tables_s* ptable,gr_tbl_t* grammar_table, s
 							   	ptable->ACTION[i][follows->array[tok_index]->items[b]->token->termnum].action = REDUCE;
 //							   	ptable->ACTION[i][follows->array[tok_index]->items[b]->token->termnum].state = grammar_table->rules[rule]->symbols[0]->tval;
 							   ptable->ACTION[i][follows->array[tok_index]->items[b]->token->termnum].state = rule;
-							   ptable->ACTION[i][follows->array[tok_index]->items[b]->token->termnum].rule = rule;
+							   ptable->ACTION[i][follows->array[tok_index]->items[b]->token->termnum].rule = grammar_table->tokens[grammar_table->rules[rule]->symbols[0]->tval].termnum;
 							   ptable->ACTION[i][follows->array[tok_index]->items[b]->token->termnum].numtoks = grammar_table->rules[rule]->used-1;
 						    }
 						    else{
@@ -607,7 +607,7 @@ void fill_action_table(struct parser_tables_s* ptable,gr_tbl_t* grammar_table, s
 							   	ptable->ACTION[i][ptable->num_terms-1].action = REDUCE;
 //							   	ptable->ACTION[i][ptable->num_terms-1].state = grammar_table->rules[rule]->symbols[0]->tval;
 							   ptable->ACTION[i][ptable->num_terms-1].state = rule;
-							   	ptable->ACTION[i][ptable->num_terms-1].rule = rule;
+							   	ptable->ACTION[i][ptable->num_terms-1].rule = grammar_table->tokens[grammar_table->rules[rule]->symbols[0]->tval].termnum;
 							   	ptable->ACTION[i][ptable->num_terms-1].numtoks = grammar_table->rules[rule]->used-1;
 						    }
 						    else{

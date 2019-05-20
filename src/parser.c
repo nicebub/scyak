@@ -8,6 +8,7 @@
 #include "functions.h"
 //#include "lr0.h"
 #include "lr0b.h"
+#include "run_parser.h"
 #define next_token() current_tok = tokenize(specfile)
 #ifdef FLEX
 extern char* yytext;
@@ -137,6 +138,9 @@ void read_and_parse_specfile(FILE* specfile){
 //	get_follow_set(canon,grammar_table);
 	optional_auxillary(specfile);
 	printf("done reading specfile\n");
+    printf("running parser\n");
+    run_parser(ptables);
+    printf("done running parser\n");
 }
 int optional_definitions(FILE* specfile){
 	while(current_tok != MARK ){ /* input != MARK '%%' */
