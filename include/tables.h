@@ -9,7 +9,9 @@
 #define INIT_GR_RULES_SIZE 20
 #define INIT_TABLE_SIZE 20
 #define TABLE_INC_SIZE 2*INIT_TABLE_SIZE
-#define MAX_TOKS 20
+#define TOK_INC_SIZE 25
+#define RUL_INC_SIZE 20
+#define MAX_TOKS 1
 #define MAX_RULS 20
 #define MAX_RULS_SZ 20
 #define tok_tab_t char
@@ -17,6 +19,8 @@
 
 #define TERMINAL 1
 #define NONTERMINAL 2
+
+
 struct attribute_s 
 {
 	tok_tab_t * name;
@@ -50,8 +54,7 @@ struct rule_s
 #define rule_t struct rule_s
 
 
-//#define gr_tbl gr_t *
-struct table_s 
+struct table_s
 {
 	size_t num_ruls;
 	size_t used;
@@ -62,51 +65,54 @@ struct table_s
 	rule_t ** rules;
 	tok_tbl_t* tokens;
 };
+
 #define gr_tbl_t struct table_s
 #define INIT_GRTBL_SIZE 10
-//#define create_grtbl(name,size) ((name) = malloc(sizeof(gr_t*)*size))
-//#define create_dyn_grtbl(name,size) gr_tbl_t *(name)[INIT_GRTBL_SIZE];\
-(name) = malloc(sizeof(gr_tbl_t))
-#define add_rule_to_tbl(name,which,rll) (name)[(which)] = (rll)
-#define create_rules_array(name,size) 	gr_t (name)[(size)]
-#define create_attribute_array(name,size) 	attr_t (name)[(size)]
-#define create_tok_tbl(name,size) 	tok_tbl_t (name)[(size)]
-#define create_dyn_tok_tbl(name,size) 	tok_tbl_t * (name); \
-										(name) = malloc(sizeof(tok_tbl_t)*(size))
-#define res_dyn_tok_tbl(name,size) if(sizeof((name)) < (sizeof(tok_tbl_t)*(size))) \
-											realloc((name),(size));
-#define set_symb_name(ats,which,nm) ((ats)[(which)].symb_name = (nm))
-#define attach_attrib_array(ats,which,ar) ((ats)[(which)].attribs = (ar))
-#define set_attribute_name(ats,which,nm) (ats)[(which)].name = (nm)
-#define set_tok_name(ats,which,nm) (ats)[(which)].name = (nm)
-#define set_attribute_val(ats,which,nm) ((ats)[(which)].val = (nm))
-#define set_tok_val(ats,which,nm) ((ats)[(which)].val = (nm))
-#define set_tok_type(ats,which,nm) ((ats)[(which)].type = (nm))
-#define get_rul_nam(ats,which) ((ats)[(which)].symb_name)
-#define get_attribs(ats,which) ((ats)[(which)].attribs)
-#define get_attr_nam(ats,which,b) ((ats)[(which)].attribs[(b)].name)
-#define get_attr_val(ats,which,b) ((ats)[(which)].attribs[(b)].val)
-#define get_tok_nam(ats,which) ((ats)[(which)].name)
-#define get_tok_val(ats,which) ((ats)[(which)].val)
-#define get_tok_type(ats,which) ((ats)[(which)].type)
-//#define 
 
-symb_t * create_symb(char* name, tok_tab_t val);
-rule_t * create_grrul(char* name, size_t size);
-gr_tbl_t * create_grtbl(char* name,size_t size);
-
+/* Token */
+tok_tab_t* get_tok_nam(tok_tbl_t* token);
+tok_tab_t get_tok_val(tok_tbl_t* token);
+size_t get_tok_type(tok_tbl_t* token);
+size_t get_tok_termnum(tok_tbl_t* token);
+size_t get_tok_tval(tok_tbl_t* token);
 void set_tok_tval(tok_tbl_t* in_token, size_t val);
+void set_tok_nam(tok_tbl_t* token, tok_tab_t* name);
+void set_tok_val(tok_tbl_t* token, tok_tab_t val);
+void set_tok_type(tok_tbl_t* token, size_t type);
+void set_tok_termnum(tok_tbl_t* token, size_t term);
+void print_tok(tok_tbl_t* intok);
+tok_tbl_t* get_tok_by_id(tok_tbl_t* inarray, size_t id);
+void print_tok_array(tok_tbl_t* inarray,size_t used);
+/* end token methods */
+
+/* symbols */
+attr_t* get_symb_attrib(symb_t* symbol);
+tok_tab_t* get_symb_nam(symb_t* symbol);
+tok_tab_t get_symb_val(symb_t* symbol);
+size_t get_symb_tval(symb_t* in_symb);
+symb_t * create_symb(char* name, tok_tab_t val);
+size_t get_symb_num_attrib(symb_t* symbol);
+void set_symb_attrib(symb_t* symbol, attr_t* attribs);
+void set_symb_nam(symb_t* symbol, tok_tab_t* name);
+void set_symb_val(symb_t* symbol, tok_tab_t val);
 void set_symb_tval(symb_t* in_symb, size_t val);
 symb_t* copy_symb(symb_t* in_symb);
+void print_symbol(symb_t * symbol);
+/* end symbol methods */
 
+/* rule */
+rule_t * create_grrul(char* name, size_t size);
 void add_symb_to_rule(rule_t* rule,symb_t * symbol);
-void add_rule_to_table(gr_tbl_t * table, rule_t* rule);
-
-void calculate_num_terms(gr_tbl_t* grammar_table);
-
-void print_tok(tok_tbl_t* intok);
-void print_tok_array(tok_tbl_t* inarray,size_t used);
 void print_rule(rule_t* rule);
+symb_t* get_symb_by_pos(rule_t* rule, size_t pos);
+/* end rule methods */
+/* table */
+gr_tbl_t * create_grtbl(char* name,size_t size);
+void add_rule_to_table(gr_tbl_t * table, rule_t* rule);
+void calculate_num_terms(gr_tbl_t* grammar_table);
 void print_gr_table(gr_tbl_t * table);
-//tok_tbl_t * create_tok_tbl(char * name,size_t size);
+rule_t* get_rul_by_pos(gr_tbl_t* table, size_t pos);
+/* end table methods */
+
+
 #endif

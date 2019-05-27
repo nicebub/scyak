@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include "tables.h"
+#include "lr0b.h"
 #include "lr0.h"
 #define RETVAL 0
 #define tok_type int
@@ -12,7 +13,7 @@ static tok_type tok_name;
 
 #define current_tok token
 /* Function Prototypes */
-void read_and_parse_specfile(FILE* specfile);
+struct parser_tables_s* read_and_parse_specfile(FILE* specfile);
 int optional_definitions(FILE* specfile);
 int optional_auxillary(FILE* specfile);
 int definition(FILE* specfile);

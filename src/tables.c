@@ -3,10 +3,67 @@
 #include "tables.h"
 #include <stdlib.h>
 
+inline tok_tab_t* get_tok_nam(tok_tbl_t* token){
+    if(!token) return NULL;
+    return token->name;
+}
+
+inline tok_tab_t get_tok_val(tok_tbl_t* token){
+    if(!token) return -1;
+    return token->val;
+}
+inline size_t get_tok_type(tok_tbl_t* token){
+    if(!token) return -1;
+    return token->type;
+}
+
+inline void set_tok_val(tok_tbl_t* token, tok_tab_t val){
+    if(!token) return;
+    token->val = val;
+}
+inline size_t get_tok_tval(tok_tbl_t* token){
+    if(!token) return -1;
+    return token->tval;
+}
+
+inline void set_tok_type(tok_tbl_t* token, size_t type){
+    if(!token) return;
+    token->type = type;
+}
+inline size_t get_tok_termnum(tok_tbl_t* token){
+    if(!token) return -1;
+    return token->termnum;
+}
+inline void set_tok_termnum(tok_tbl_t* token, size_t term){
+    if(!token) return;
+    token->termnum = term;
+}
+inline void set_tok_nam(tok_tbl_t* token, tok_tab_t* name){
+    if(!token) return;
+    token->name = name;
+}
+tok_tbl_t* get_tok_by_id(tok_tbl_t* inarray, size_t id){
+    if(!inarray) return NULL;
+    return &(inarray[id]);
+}
+
 symb_t * create_symb(char* name,tok_tab_t val){
 	symb_t* temp;
+    size_t slen;
 	temp = malloc(sizeof(symb_t));
-	temp->name = name;
+    	if(!temp){
+	   perror("in create symb");
+	   exit(EXIT_FAILURE);
+    	}
+    memset(temp,0,sizeof(symb_t));
+    slen = sizeof(char)*(strlen(name)+1);
+	temp->name = malloc(slen);
+    if(!(temp->name)){
+	   perror("in create symb name");
+	   exit(EXIT_FAILURE);
+    }
+    memset(temp->name,0,slen);
+    strncpy(temp->name,name,slen-1);
 	temp->val = val;
     	temp->tval = -1;
 	temp->num_attribs = 0;
@@ -16,21 +73,76 @@ symb_t * create_symb(char* name,tok_tab_t val){
 
 symb_t* copy_symb(symb_t* in_symb){
 	symb_t* out_symb;
+    size_t slen;
 	if(!in_symb) return NULL;
 	out_symb = malloc(sizeof(symb_t));
-	out_symb->name = malloc(sizeof(char)*strlen(in_symb->name)+1);
-	strncpy(out_symb->name,in_symb->name,strlen(in_symb->name)+1);
+    	if(!out_symb){
+	   perror("in copy symb");
+	   exit(EXIT_FAILURE);
+    	}
+    memset(out_symb,0,sizeof(symb_t));
+    	slen = sizeof(char)*(strlen(in_symb->name)+1);
+	out_symb->name = malloc(slen);
+    	if(!(out_symb->name)){
+	   perror("in copy symb name");
+	   exit(EXIT_FAILURE);
+    	}
+    	memset(out_symb->name,0,slen);
+	strncpy(out_symb->name,in_symb->name,slen-1);
 	out_symb->val = in_symb->val;
 	out_symb->num_attribs = in_symb->num_attribs;
     	out_symb->tval = in_symb->tval;
-//	out_symb->attribs = copy_attribs(in_symb->attribs);
 	return out_symb;
+}
+inline attr_t* get_symb_attrib(symb_t* symbol){
+    if(!symbol) return NULL;
+    return symbol->attribs;
+}
+inline tok_tab_t* get_symb_nam(symb_t* symbol){
+    if(!symbol) return NULL;
+    return symbol->name;
+}
+inline tok_tab_t get_symb_val(symb_t* symbol){
+    if(!symbol) return -1;
+    return symbol->val;
+}
+inline size_t get_symb_tval(symb_t* in_symb){
+    if(!in_symb) return -1;
+    return in_symb->tval;
+}
+inline size_t get_symb_num_attrib(symb_t* symbol){
+    if(!symbol) return -1;
+    return symbol->num_attribs;
+}
+inline void set_symb_attrib(symb_t* symbol, attr_t* attribs){
+    if(!symbol) return;
+    symbol->attribs = attribs;
+}
+inline void set_symb_nam(symb_t* symbol, tok_tab_t* name){
+    if(!symbol) return;
+    symbol->name = name;
+}
+inline void set_symb_val(symb_t* symbol, tok_tab_t val){
+    if(!symbol) return;
+    symbol->val = val;
 }
 
 rule_t * create_grrul(char* name, size_t size){
 	rule_t* temp;
+    size_t slen;
 	temp = malloc(sizeof(rule_t));
-	temp->symbols = malloc(sizeof(symb_t*)*size);
+    if(!temp){
+	   perror("in create grrul");
+	   exit(EXIT_FAILURE);
+    }
+    memset(temp,0,sizeof(rule_t));
+    slen = sizeof(symb_t*)*size;
+	temp->symbols = malloc(slen);
+    	if(!(temp->symbols)){
+	   perror("in create grrul symbols");
+	   exit(EXIT_FAILURE);
+    	}
+    memset(temp->symbols,0,slen);
 	for(int i=0;i<size;i++)
 		temp->symbols[i] = NULL;
 	temp->used = 0;
@@ -38,34 +150,47 @@ rule_t * create_grrul(char* name, size_t size){
 	return temp;
 	
 }
-void set_tok_tval(tok_tbl_t* in_token, size_t val){
+inline void set_tok_tval(tok_tbl_t* in_token, size_t val){
     if(!in_token) return;
     in_token->tval = val;
 }
-void set_symb_tval(symb_t* intable, size_t val){
+inline void set_symb_tval(symb_t* intable, size_t val){
     if(!intable) return;
     intable->tval = val;
 }
 void add_symb_to_rule(rule_t* rule,symb_t * symbol){
+    size_t slen,rlen;
 	if(rule && symbol){
-		if(rule->used == rule->num_symbs-1){
-			printf("need more memory for rules, extdending if possible\n");
-			rule->symbols = realloc(rule->symbols,sizeof(symb_t*)
-				*(rule->num_symbs+20));
-			rule->num_symbs += 20;
-			for(size_t i=rule->used;i<rule->num_symbs;i++)
-				rule->symbols[i] = NULL;
+		if(rule->used == rule->num_symbs){
+			printf("need more memory for symbols, extending if possible\n");
+		    rlen = rule->used+RUL_INC_SIZE;
+		    slen = sizeof(symb_t*)*(rlen);
+		    rule->symbols = realloc(rule->symbols,slen);
+		    if(!rule->symbols){
+			   perror("Realloc in add symb to rule:");
+			   exit(EXIT_FAILURE);
+		    }
+		    for(size_t i=rule->used;i<rlen;i++)
+			   rule->symbols[i] = NULL;
+			rule->num_symbs += RUL_INC_SIZE;
 		}
 		rule->symbols[rule->used] = symbol;
 		rule->used++;
 	}
 }
+symb_t* get_symb_by_pos(rule_t* rule, size_t pos){
+    if(!rule) return NULL;
+    if(!rule->symbols || rule->used <=0)
+	   return NULL;
+    return rule->symbols[pos];
+}
+
 void print_tok(tok_tbl_t* intok){
 	if(!intok){
 		printf("NULL token\n");
 		return;
 	}
-	printf("Token %s: val:%d type: %d\n",intok->name,intok->val,intok->type);
+    printf("Token %s: val:%d type: %zu\n",get_tok_nam(intok),get_tok_val(intok),get_tok_type(intok));
 	return;
 }
 void print_tok_array(tok_tbl_t* inarray,size_t used){
@@ -101,14 +226,21 @@ void print_rule(rule_t* rule){
 }
 
 void add_rule_to_table(gr_tbl_t * table, rule_t* rule){
+//    rule_t** newrules;
+    size_t slen,rlen;
 	if(rule == NULL){ printf("rule is NULL\n");return; }
-	if(table->used == table->num_ruls-1){
-		printf("need more memory for rules, extdending if possible\n");
-		table->rules = realloc(table->rules,sizeof(rule_t*)
-			*(table->num_ruls+20));
-		for(size_t i=table->used;i<table->num_ruls+20;i++)
+	if(table->used == table->num_ruls){
+		printf("need more memory for rules, extending if possible\n");
+	    rlen = table->used+RUL_INC_SIZE;
+	    slen = sizeof(rule_t*)*(rlen);
+	    table->rules = realloc(table->rules,slen);
+	    if(!table->rules){
+		   perror("Realloc in add rule to table:");
+		   exit(EXIT_FAILURE);
+	    }
+		for(size_t i=table->used;i<rlen;i++)
 			table->rules[i] = NULL;
-		table->num_ruls += 20;
+		table->num_ruls += RUL_INC_SIZE;
 	}
 	table->rules[table->used] = rule;
 	table->used++;
@@ -116,7 +248,17 @@ void add_rule_to_table(gr_tbl_t * table, rule_t* rule){
 
 gr_tbl_t * create_grtbl(char* name,size_t size){
 	gr_tbl_t * table = malloc(sizeof(gr_tbl_t));
+    	if(!table){
+	   perror("in create grtbl");
+	   exit(EXIT_FAILURE);
+    	}
+    	memset(table,0,sizeof(gr_tbl_t));
 	table->rules = malloc(sizeof(rule_t*)*size);
+    	if(!(table->rules)){
+	   perror("in create grtbl table rules");
+	   exit(EXIT_FAILURE);
+    	}
+    memset(table->rules,0,sizeof(rule_t*)*size);
 	for(int i=0;i<size;i++)
 		table->rules[i] = NULL;
 	table->num_ruls = size;
@@ -128,9 +270,12 @@ gr_tbl_t * create_grtbl(char* name,size_t size){
 	table->tokens = NULL;
 	return table;
 }
-/*tok_tbl_t * create_tok_tbl(char * name,size_t size){
-	
-}*/
+rule_t* get_rul_by_pos(gr_tbl_t* table, size_t pos){
+    if(!table) return NULL;
+    if(!table->rules || table->used <=0)
+	   return NULL;
+    return table->rules[pos];
+}
 
 void calculate_num_terms(gr_tbl_t * grammar_table){
     if(!grammar_table) return;
@@ -138,12 +283,10 @@ void calculate_num_terms(gr_tbl_t * grammar_table){
 	   if(grammar_table->tokens[i].type == TERMINAL){
 		  grammar_table->tokens[i].termnum = grammar_table->num_terms++;
 		  printf("set terminal %s to term num %zu\n",grammar_table->tokens[i].name,grammar_table->tokens[i].termnum);
-//		  grammar_table->num_terms++;
 	   }
 	   else{
 		  grammar_table->tokens[i].termnum = grammar_table->num_nonterms++;
 		  printf("set nonterminal %s to nonterm num %zu\n",grammar_table->tokens[i].name,grammar_table->tokens[i].termnum);
-//		  grammar_table->num_nonterms++;
 	   }
     }
     printf("IN this table, found %zu terminals and %zu nonterminals\n",grammar_table->num_terms,grammar_table->num_nonterms);

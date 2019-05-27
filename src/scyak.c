@@ -9,9 +9,7 @@ This is the main file of the parser generator. This wrapper will call
 #include "init.h"
 #include "spcread.h"
 #include "parser.h"
-
-
-//#define FLEX 
+#include "run_parser.h"
 
 void version(void);
 void usage(void);
@@ -52,7 +50,8 @@ int main(int argc, char ** argv){
 	#ifdef FLEX
 	yyin = spec_file;
 	#endif
-	read_and_parse_specfile(spec_file);
+    run_parser(read_and_parse_specfile(spec_file));
+    	printf("done running parser\n");
 	/*
 		construct table from spec file
 	

@@ -116,8 +116,8 @@ int mlexer(FILE* thefile){
 				return 4;
 			 }
 			 else{
-				printf("didnt find anything?? %c\n",rchar);
-				return -1;
+				printf("Character not allowed in the language %c\n",rchar);
+				exit(EXIT_FAILURE);
 			 }
 	   }
 	   rchar = fgetc(thefile);

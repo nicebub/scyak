@@ -18,12 +18,6 @@ FILE* init(int argc, char** argv){
 	FILE* spec_file;
 	/* shouldn't have a problem here unless getopt parsing
 		wasn't accurate */
-
-/*	if(argc != ARGS_ALLOWED){
-		printf("Error: Please supply a file to open and process\n");
-		exit(EXIT_FAILURE);
-	}
-*/
 	/* make sure file was opened, otherwise might as well
 		split */
 	if((spec_file = fopen(argv[FIRST],"r")) == NULL){

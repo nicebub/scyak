@@ -1,8 +1,6 @@
 #ifndef BTST_H
 #define BTST_H
 
-
-//#include <sys/_types/_u_int64_t.h>
 #include <sys/types.h>
 #include <string.h>
 #include <stdio.h>
