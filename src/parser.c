@@ -6,7 +6,6 @@
 #include "spcread.h"
 #include "tables.h"
 #include "functions.h"
-//#include "lr0.h"
 #include "lr0b.h"
 #define next_token() current_tok = tokenize(specfile)
 #ifdef FLEX
@@ -18,48 +17,30 @@ extern char sctext[];
 #endif
 
 #define first_rule_length 2
-/*
-#define ini_tok_name(name,...) \
-	temp_tok_nam = malloc(sizeof(char)*(strlen(name)__VA_ARGS__)); \
+
+#define ini_tok_name(name,message,...) \
+ 	slen = sizeof(char)*(strlen(name)__VA_ARGS__); \
+	temp_tok_nam = malloc(slen); \
     	if(!temp_tok_nam){ \
-		perror("in ini_tok_name"); \
+		perror(message); \
 		exit(EXIT_FAILURE); \
 	} \
-	memset(temp_tok_nam,0,sizeof(char)*(strlen(name)__VA_ARGS__)); \
-	strncpy(temp_tok_nam,name,sizeof(char)*(strlen(name)__VA_ARGS__))
-*/
+	memset(temp_tok_nam,0,slen); \
+	strncpy(temp_tok_nam,name,slen)
+
 #define process_n_set_tval(tokid,type,pos) \
 	new_tok_val = process_token(tokid,temp_tok_nam,type,pos,grammar_table); \
-/*	tokens = grammar_table->tokens; \ */ \
-	set_tok_tval(get_tok_by_id(grammar_table->tokens,new_tok_val),new_tok_val); \
-	printf("newtokval:%d\n",new_tok_val)
-/*
+	set_tok_tval(get_tok_by_id(grammar_table->tokens,new_tok_val),new_tok_val)
+
 #define create_token(name,tokid,type,pos) 	\
-	temp_tok_nam = malloc(sizeof(char)*(strlen(name)+1)); \
-	if(!temp_tok_nam){ \
-		perror("in ini_tok_name"); \
-		exit(EXIT_FAILURE); \
-	} \
-	memset(temp_tok_nam,0,sizeof(char)*(strlen(name)+1)); \
-	new_tok_val = process_token(tokid,temp_tok_nam,type,pos,grammar_table); \
-	tokens = grammar_table->tokens; *//*\
-	set_tok_tval(&(grammar_table->tokens[new_tok_val]),new_tok_val); \
-	printf("newtokval:%d\n",new_tok_val)
+	ini_tok_name(name,"create token",+1); \
+	process_n_set_tval(tokid,type,pos)
 
 #define create_token_minus_1(name,tokid,type,pos)  \
-	temp_tok_nam = malloc(sizeof(char)*(strlen(name)__VA_ARGS__)); \
-	if(!temp_tok_nam){ \
-		perror("in ini_tok_name"); \
-		exit(EXIT_FAILURE); \
-	} \
-	memset(temp_tok_nam,0,sizeof(char)*(strlen(name)__VA_ARGS__)); \
-	strncpy(temp_tok_nam,name,sizeof(char)*(strlen(name)__VA_ARGS__)); \
+	ini_tok_name(name,"create token m1"); \
 	temp_tok_nam[strlen(name)-1] ='\0'; \
-	new_tok_val = process_token(tokid,temp_tok_nam,type,pos,grammar_table); \
-	tokens = grammar_table->tokens; *//*\
-	set_tok_tval(&(grammar_table->tokens[new_tok_val]),new_tok_val); \
-	printf("newtokval:%d\n",new_tok_val)
-*/
+	process_n_set_tval(tokid,type,pos)
+
 #define create_code_token() \
 			char* codenum; \
 			codenum = malloc(sizeof(char)*(3)); \
@@ -71,22 +52,25 @@ extern char sctext[];
 			codenum=NULL; \
 			process_n_set_tval(CODE,TERMINAL,1)
 
-#define add_token_decls() 	tok_tbl_t * tokens; \
+#define add_token_decls() 		tok_tbl_t * tokens; \
 							char* temp_tok_nam; \
 							tok_tab_t new_tok_val; \
 							tokens = NULL; \
 							temp_tok_nam = NULL; \
 							tokens=grammar_table->tokens
 
-#define add_rule_decls() 	rule_t* temp_rules; \
+#define add_rule_decls() 		rule_t* temp_rules; \
 							temp_rules = NULL
+
+#define gen_symb_to_rule \
+							symb_t* temp_sym = create_symb(temp_tok_nam,new_tok_val);\
+							set_symb_tval(temp_sym,new_tok_val); \
+							add_symb_to_rule(temp_rules,temp_sym)
 
 
 #define generate_rule(rnm,rln) \
 							temp_rules = create_grrul(rnm,rln); \
-							symb_t* temp_sym = create_symb(temp_tok_nam,new_tok_val);\
-							set_symb_tval(temp_sym,new_tok_val); \
-							add_symb_to_rule(temp_rules,temp_sym)
+							gen_symb_to_rule
 
 #define run_g_rul_body() \
 							generate_rule((char*)rl,INIT_GR_RULES_SIZE*2); \
@@ -137,40 +121,20 @@ struct parser_tables_s* read_and_parse_specfile(FILE* specfile){
     	}
     memset(grammar_table->tokens,0,slen);
     grammar_table->num_toks = MAX_TOKS;
-
-    slen = sizeof(char)*(strlen("S'")+1);
-    temp_tok_nam = malloc(slen);
-    if(!temp_tok_nam){
-	   perror("in read and parse specfile creating token S'\n");
-	   exit(EXIT_FAILURE);
-    }
-    memset(temp_tok_nam,0,slen);
-    strncpy(temp_tok_nam,"S'",slen);
-    new_tok_val = process_token(REALSTART,temp_tok_nam,NONTERMINAL,0,grammar_table);
-    set_tok_tval(get_tok_by_id(grammar_table->tokens,new_tok_val),new_tok_val);
+    create_token("S'",REALSTART,NONTERMINAL,0);
 
 #ifdef debug_print
     printf("newtokval:%d\n",new_tok_val);
 #endif
 
-    temp_rules = create_grrul((tok_tab_t*)rs,first_rule_length);
-    symb_t* temp_sym = create_symb(temp_tok_nam,new_tok_val);
-    set_symb_tval(temp_sym,new_tok_val);
-    add_symb_to_rule(temp_rules,temp_sym);
+    generate_rule((char*)rs,first_rule_length);
     add_rule_to_table(grammar_table,temp_rules);
+
 #ifdef debug_print
 	print_gr_table(grammar_table);
 #endif
-    slen = sizeof(char)*(strlen("{e}")+1);
-    temp_tok_nam = malloc(slen);
-    if(!temp_tok_nam){
-	   perror("in read and parse specfile creating token {e}\n");
-	   exit(EXIT_FAILURE);
-    }
-    memset(temp_tok_nam,0,slen);
-    strncpy(temp_tok_nam,"{e}",slen);
-    new_tok_val = process_token(EMPTY,temp_tok_nam,TERMINAL,1,grammar_table);
-    set_tok_tval(get_tok_by_id(grammar_table->tokens,new_tok_val),new_tok_val);
+    create_token("{e}",EMPTY,TERMINAL,1);
+
 #ifdef debug_print
     printf("newtokval:%d\n",new_tok_val);
 #endif
@@ -199,11 +163,10 @@ struct parser_tables_s* read_and_parse_specfile(FILE* specfile){
 }
 
 inline int optional_definitions(FILE* specfile){
-	while(current_tok != MARK ){ /* input != MARK '%%' */
+	while(current_tok != MARK ){
+	    /* input != MARK '%%' */
 		definition(specfile);
-//		if(current_tok == MARK) break;
 		switch(current_tok){
-			//case UNION:
 		    case MARK:
 			   break;
 			case START:
@@ -221,25 +184,29 @@ inline int optional_definitions(FILE* specfile){
 	return RETVAL;
 }
 inline int optional_auxillary(FILE* specfile){
-	switch(current_tok){ /* what is the input token value, switch on this */
-		case EOF: /* EOF  this is ok, we are done with the rules with no extra auxillary */ 
-								break; 
-		case MARK: /* MARK '%%' now read everything else as code to output
+	switch(current_tok){
+		   /* what is the input token value, switch on this */
+		case EOF:
+		   /* EOF  this is ok, we are done with the rules with no extra auxillary */
+				break;
+		case MARK:
+		   /* MARK '%%' now read everything else as code to output
 								to parser file to be included */
-								break;
-		default: printf("Expecting either EOF or optional %%%% Marker\n");
+		   		break;
+		default: 	printf("Expecting either EOF or optional %%%% Marker\n");
 					/* error we aren't expecting anything besides the
 							end of file or an auxillary unit */
-								break;
+				break;
 	}
 	return RETVAL;
 }
 int definition(FILE* specfile){
 	add_token_decls();
-    size_t slen;
+    	size_t slen;
 	int typ_tok,tag_tok;
 
-	switch(current_tok){ /* input token value will be here*/
+	switch(current_tok){
+		   /* input token value will be here*/
 		case START: /* %start */ 
 			next_token();
 			if(current_tok != IDENT){
@@ -247,30 +214,21 @@ int definition(FILE* specfile){
 				exit(EXIT_FAILURE);
 			}
 			printf("Definition: %%start %s\n",cur_text);
-		   	slen = sizeof(char)*(strlen(cur_text)+1);
-		   	temp_tok_nam = malloc(slen);
-		   	if(!temp_tok_nam){
-			  perror("in definition creating a string\n");
-			  exit(EXIT_FAILURE);
-		   	}
-		   	memset(temp_tok_nam,0,slen);
-		   	strncpy(temp_tok_nam,cur_text,slen);
-		   	new_tok_val = process_token(current_tok,temp_tok_nam,NONTERMINAL,0,grammar_table);
-		   	set_tok_tval(get_tok_by_id(grammar_table->tokens,new_tok_val),new_tok_val);
+		   	create_token(cur_text,current_tok,NONTERMINAL,0);
+
 #ifdef debug_print
 		   	printf("newtokval:%d\n",new_tok_val);
 #endif
 			break;
-		case UNION: /* %union */ 
+		case UNION:
+		   /* %union */
 		   	printf("Definition: %%union\n");
 			break;
-		case LMARK: /* '%{'  token, read all code looking for  token '%}'
+		case LMARK:
+		   /* '%{'  token, read all code looking for  token '%}'
 					if find EOF or potentiall MARK '%%' then error occurs */
 			next_token();
 		   	printf("start of code\n");
-/*			while(current_tok != RMARK && current_tok != MARK && current_tok != EOF){
-				next_token();
-			}*/
 		   	while(1){
 			  switch(current_tok){
 				 case RMARK:
@@ -298,7 +256,8 @@ int definition(FILE* specfile){
 			 }
 #endif
 			 break;
-		default: /* we found a grammar definition, continue */
+		default:
+		   /* we found a grammar definition, continue */
 			typ_tok = option_type(specfile);
 			next_token();
 			tag_tok = optional_tag(specfile);
@@ -325,9 +284,10 @@ int option_type(FILE* specfile){
 		case TYPE: /* %type token */ 
 			printf("Definition: %%type\n");
 			break;
-		default: printf("not expecting this token %d\n", current_tok);
-					exit(EXIT_FAILURE);/* error anything else */ 
-					break;
+		default:
+		   	printf("not expecting this token %d\n", current_tok);
+			exit(EXIT_FAILURE);/* error anything else */
+			break;
 	}
 	return current_tok;
 }
@@ -339,9 +299,6 @@ int optional_tag(FILE* specfile){
 		/* read IDENTIFIER token or produce error */
 		/* process .... */
 		/* eat token '>' end of tag or error */
-/*		while(current_tok != GREAT && current_tok != MARK && current_tok != EOF){
-			next_token();
-		}*/
 	    while(1){
 		   switch(current_tok){
 			  case GREAT:
@@ -367,7 +324,8 @@ int optional_tag(FILE* specfile){
 		return RETVAL;
 }
 int ident_list(FILE* specfile){
-	while(current_tok != MARK){ /* replace with input token != MARK '%% */
+	while(current_tok != MARK){
+	    /* replace with input token != MARK '%% */
 combo:		identcombo(specfile);
 		switch(current_tok){
 			case UNION:
@@ -384,14 +342,18 @@ combo:		identcombo(specfile);
 				next_token();
 				break;
 		}
-		switch(current_tok){ /* input token value goes here */
+		switch(current_tok){
+			   /* input token value goes here */
 			case COMMA: 
-						break; /* iput token == ',' comma , eat token
+				break;
+			   /* iput token == ',' comma , eat token
 					 			continue loop */
-				 		//break; /* IDENTIFIER token, go back through loop */
+				/* IDENTIFIER token, go back through loop */
 			case MARK:
-				 		printf("found a MARK, finish loop\n");
-				 		continue; break; /* MARK '%%' token, finish loop */
+				printf("found a MARK, finish loop\n");
+				continue;
+			   break;
+			   /* MARK '%%' token, finish loop */
 			case UNION:
 			case START:
 			case TOKEN:
@@ -405,7 +367,8 @@ combo:		identcombo(specfile);
 				goto combo;
 				break;
 			default:
-					break; /* error otherwise */
+				break;
+			   /* error otherwise */
 		}
 		if(current_tok != MARK) next_token();
 	}
@@ -414,43 +377,42 @@ leaveloop:
 }
 int identcombo(FILE* specfile){
 	add_token_decls();
-//	size_t *num_toks;
     size_t slen;
-//	num_toks = &(grammar_table->tokused);
 
-	switch(current_tok){ /* input token value goes here */
-		case IDENT:  /* IDENTIFIER token */
-		   slen = sizeof(char)*(strlen(cur_text)+1);
-		   temp_tok_nam = malloc(slen);
-		   if(!temp_tok_nam){
-			  perror("in identcombo creating a string\n");
-			  exit(EXIT_FAILURE);
-		   }
-		   memset(temp_tok_nam,0,slen);
-		   strncpy(temp_tok_nam,cur_text,slen);
-		   new_tok_val = process_token(current_tok,temp_tok_nam,TERMINAL,1,grammar_table);
-		   set_tok_tval(get_tok_by_id(grammar_table->tokens,new_tok_val),new_tok_val);
+	switch(current_tok){
+		   /* input token value goes here */
+		case IDENT:
+		   /* IDENTIFIER token */
+		   create_token(cur_text,current_tok,TERMINAL,1);
+
 #ifdef debug_print
 		   printf("newtokval:%d\n",new_tok_val);
 		   printf("temp_tok_nam: %s\n",temp_tok_nam);
 		   printf("cur_text: %s\n",cur_text);
 #endif
+
 		   next_token();
-		   if(current_tok == INTEGER){ /* next input token is NUMBER then */
+
+		   if(current_tok == INTEGER){
+			  /* next input token is NUMBER then */
 			  size_t ndx = grammar_table->tokused-1;
 			  tok_tbl_t* ttok = get_tok_by_id(grammar_table->tokens,ndx);
-			  tok_tab_t* tnam = get_tok_nam(ttok);
 			  tok_tab_t tval = get_tok_val(ttok);
+
+#ifdef debug_print
+			  tok_tab_t* tnam = get_tok_nam(ttok);
 			  printf("top token in tokens: %s\n",tnam);
 			  printf("integer value of token given: %d\n",atoi(cur_text));
 			  printf("last token before %s: %d\n",tnam,tval);
-
+#endif
 			  set_tok_val(ttok,atoi(cur_text));
-			  tnam = get_tok_nam(ttok);
 			  tval = get_tok_val(ttok);
+#ifdef debug_print
 			  printf("last token after %s: %d\n",tnam,tval);
+#endif
 			}
-			else if(current_tok == COMMA || current_tok == IDENT){ /* input token == ',' comma or == IDENTIFIER */
+			else if(current_tok == COMMA || current_tok == IDENT){
+			    /* input token == ',' comma or == IDENTIFIER */
 
 				printf("found either a comma or another ident\n");
 			/* process as just IDENTIFIER and not IDENTIFER NUMBER */
@@ -462,9 +424,10 @@ int identcombo(FILE* specfile){
 			}
 			 /* error otherwise */
 			break;
-		default: 		printf("error found %d\n",current_tok);
-					exit(EXIT_FAILURE);
-					break; /* error, not expecting anthing else */
+		default:
+		   	printf("error found %d\n",current_tok);
+			exit(EXIT_FAILURE);
+			break; /* error, not expecting anthing else */
 	}
 	return RETVAL;
 }
@@ -485,28 +448,21 @@ POTIENTIAL - need for checking for the ';' semicolon token here but
 	while(current_tok != MARK && current_tok != EOF){
 	    /* input token value == C_IDENTIFIER, repeat reading the
 					grammar rule as in the previous iteration above */
-		if(current_tok != C_IDENT){  /* input token == C_IDENTIFER otherwise error */
+		if(current_tok != C_IDENT){
+		    /* input token == C_IDENTIFER otherwise error */
 			printf("expecting C_IDENT, we got %d\n", current_tok);
 			exit(EXIT_FAILURE);
 		}
-	    slen = sizeof(char)*(strlen(cur_text));
-	    temp_tok_nam = malloc(slen);
-	    if(!temp_tok_nam){
-		   perror("in grammar_rules creating string\n");
-		   exit(EXIT_FAILURE);
-	    }
-	    memset(temp_tok_nam,0,slen);
-	    strncpy(temp_tok_nam,cur_text,slen);
-	    temp_tok_nam[strlen(cur_text)-1] ='\0';
-	    new_tok_val = process_token(current_tok,temp_tok_nam,NONTERMINAL,0,grammar_table);
-	    set_tok_tval(get_tok_by_id(grammar_table->tokens,new_tok_val),new_tok_val);
+	    create_token_minus_1(cur_text,current_tok,NONTERMINAL,0);
+
 #ifdef debug_print
 	    printf("newtokval:%d\n",new_tok_val);
 #endif
 		run_g_rul_body();
 		/* read the C_IDENTIFIER token and process */
 		/* read ':' token or error , expecting nothing else */
-		while(current_tok == ORSYMB){ /* input token == '|' then loop */
+		while(current_tok == ORSYMB){
+		    /* input token == '|' then loop */
 			/* read token '|' */
 			run_g_rul_body();
 		}
@@ -522,8 +478,10 @@ POTIENTIAL - need for checking for the ';' semicolon token here but
 int rulebody(FILE* specfile, rule_t* temp_rules){
 	add_token_decls();
     	size_t slen;
-	while(1){ /* input token != EOF, != MARK '%%', != PREC_TOKEN %prec, != ';' */
-		switch(current_tok){ /* on input token value here */
+	while(1){
+	    /* input token != EOF, != MARK '%%', != PREC_TOKEN %prec, != ';' */
+		switch(current_tok){
+			   /* on input token value here */
 			case EOF:
 			case MARK:
 			case PREC:
@@ -535,34 +493,27 @@ int rulebody(FILE* specfile, rule_t* temp_rules){
 		    case RCBRA:
 			   goto outside;
 			   break;
-			case IDENT:  /* IDENTIFIER */
-			   slen = sizeof(char)*(strlen(cur_text)+1);
-			   temp_tok_nam = malloc(slen);
-			   if(!temp_tok_nam){
-				  perror("in rulebody creating a string\n");
-				  exit(EXIT_FAILURE);
-			   }
-			   memset(temp_tok_nam,0,slen);
-			   strncpy(temp_tok_nam,cur_text,slen);
-			   new_tok_val = process_token(current_tok,temp_tok_nam,TERMINAL,1,grammar_table);
-			   set_tok_tval(get_tok_by_id(grammar_table->tokens,new_tok_val),new_tok_val);
+			case IDENT:
+			   /* IDENTIFIER */
+			   create_token(cur_text,current_tok,TERMINAL,1);
+
 #ifdef debug_print
 			   printf("newtokval:%d\n",new_tok_val);
 #endif
-			   symb_t* temp_sym = create_symb(temp_tok_nam,new_tok_val);
-			   set_symb_tval(temp_sym,new_tok_val);
-			   add_symb_to_rule(temp_rules,temp_sym);
+			   gen_symb_to_rule;
 			   print_gr_table(grammar_table);
 			   break;
 			case LCBRA: 
-			   process_codeblock() /*  a ';' will cause error with next
-											statements */
-			   else if(current_tok == MARK) /* attached to process_codeblock*/
+			   process_codeblock()
+			   /*  a ';' will cause error with next statements */
+			   else if(current_tok == MARK)
+			   /* attached to process_codeblock*/
 				printf("found MARK\n");
 			   else
 				printf("found EOF\n");
 				continue;
-				break; /* '{' token then read and store all the next
+				break;
+			   		/* '{' token then read and store all the next
 							code found until matching '}', process any
 							variables found in the code and change them
 							accordingly. */
@@ -582,8 +533,10 @@ int rulebody(FILE* specfile, rule_t* temp_rules){
 int optional_precision(FILE* specfile,rule_t* temp_rules){
 	add_token_decls();
 
-	while(1){ /* input token != EOF, != MARK '%%' */
-		switch(current_tok){ /* input token value replace here */
+	while(1){
+	    /* input token != EOF, != MARK '%%' */
+		switch(current_tok){
+			   /* input token value replace here */
 			case EOF:
 			case MARK:
 			case C_IDENT:
@@ -593,32 +546,37 @@ int optional_precision(FILE* specfile,rule_t* temp_rules){
 				goto endop;
 				break;
 			case PREC:
-				 	/* read prec token %prec */
+				/* read prec token %prec */
 				next_token();
 				switch(current_tok){
-					case SEMICOLON: printf("found semicolon\n");/* ';' semicolon */ 
-									break;
+					case SEMICOLON:
+					   /* ';' semicolon */
+					   printf("found semicolon\n");
+					   break;
 					case IDENT:
 					/* read IDENTIFER token or error */
-						next_token();
-						if(current_tok == LCBRA){
-							process_codeblock() /*  a ';' will cause error with next
-												statements */
+					   next_token();
+					   if(current_tok == LCBRA){
+							process_codeblock()
+						  /*  a ';' will cause error with next statements */
 							/* if input token == '{' we found code to process
 							read code and output or store data */
-							else if(current_tok == MARK) /* attached to process_codeblock*/
+							else if(current_tok == MARK)
+							/* attached to process_codeblock*/
 								;
 							else
 								;
 						}
-						
-						default: break;
+						default:
+					   		break;
 				}
 						break;
-			case SEMICOLON: printf("found semicolon\n");/* ';' semicolon */ 
-							break;
+			case SEMICOLON:
+			   /* ';' semicolon */
+			   	printf("found semicolon\n");
+				break;
 			default: 
-					break; /* error? maybe, need to see later */
+				break; /* error? maybe, need to see later */
 		}
 		next_token();
 	}
@@ -634,23 +592,13 @@ inline void check_for_empty_rule(rule_t* inrule){
 	   case ORSYMB:
 	   case LCBRA:
 	   case SEMICOLON:
-		  slen = sizeof(char)*(strlen("{e}")+1);
-		  	printf("found an empty rule!! yay\n");
-		  temp_tok_nam = malloc(slen);
-		  if(!temp_tok_nam){
-			 perror("in check for empty rule creating string\n");
-			 exit(EXIT_FAILURE);
-		  }
-		  memset(temp_tok_nam,0,slen);
-		  strncpy(temp_tok_nam,"{e}",slen);
-		  new_tok_val = process_token(EMPTY,temp_tok_nam,TERMINAL,1,grammar_table);
-		  set_tok_tval(get_tok_by_id(grammar_table->tokens,new_tok_val),new_tok_val);
+		  printf("found an empty rule!! yay\n");
+		  create_token("{e}",EMPTY,TERMINAL,1);
+
 #ifdef debug_print
 		  printf("newtokval:%d\n",new_tok_val);
 #endif
-		  symb_t* temp_sym = create_symb(temp_tok_nam,new_tok_val);
-		  set_symb_tval(temp_sym,new_tok_val);
-		  add_symb_to_rule(inrule,temp_sym);
+		  gen_symb_to_rule;
 		  break;
 	   default:
 		  break;

@@ -220,6 +220,17 @@ int sets_are_equal(struct lr0_set* set1, struct lr0_set* set2){
 	return 1;
 }
 
+inline struct lr0_set* get_set_by_pos(struct lr0_array_set* array, size_t pos){
+    if(!array) return NULL;
+    if(!array->array || array->used <= 0) return NULL;
+    return array->array[pos];
+}
+
+void set_array_set_by_pos(struct lr0_array_set* array, size_t pos, struct lr0_set* inset){
+    if(!array) return;
+//    if(!array->array || array->used <=0) return;
+    array->array[pos] = inset;
+}
 
 void print_lr0_item(struct lr0_item * item){
 	if(!item){

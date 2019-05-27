@@ -57,8 +57,12 @@ int sets_are_equal(struct lr0_set* set1, struct lr0_set* set2);
 void add_item_to_set(struct lr0_set* lrset, struct lr0_item* lritem);
 void add_set_to_array(struct lr0_array_set* array, struct lr0_set* lrset);
 
+struct lr0_set* get_set_by_pos(struct lr0_array_set* array, size_t pos);
+
 int item_is_in_set(struct lr0_item* item, struct lr0_set* inset);
 int set_is_in_array(struct lr0_set* inset, struct lr0_array_set* inarray);
+
+void set_array_set_by_pos(struct lr0_array_set* array, size_t pos, struct lr0_set* inset);
 
 void print_lr0_item(struct lr0_item * item);
 void print_lr0_set(struct lr0_set* aset);

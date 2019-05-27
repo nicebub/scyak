@@ -182,7 +182,7 @@ struct lr0_array_set* items(gr_tbl_t* grammar_table) {
 #ifdef debug_print
 				printf("in second loop\n");
 #endif
-			   	got_set = GOTO(C->array[i],j,universe_set,grammar_table);
+			   	got_set = GOTO(get_set_by_pos(C,i),j,universe_set,grammar_table);
 				if (got_set->used != 0){ //GOTO(I,X ) is not empty and not in C
 #ifdef debug_print
 					printf("goto(i,x) is not empty\n");
@@ -351,7 +351,7 @@ struct lr0_array_set* get_follow_set(struct lr0_array_set* canon,gr_tbl_t* gramm
     printf("initializing follow array\n");
 #endif
     for(int a=0;a<grammar_table->tokused;a++)
-	   follows->array[a] = create_lr0_set(1);
+	   set_array_set_by_pos(follows,a,create_lr0_set(1));
 
     follows->used = grammar_table->tokused;
 
@@ -444,19 +444,22 @@ struct lr0_array_set* get_follow_set(struct lr0_array_set* canon,gr_tbl_t* gramm
 				print_lr0_set(temp);
 #endif
 			 	found_empty =item_is_in_set(create_lr0_item(EMPTY,EMPTY,NULL),temp);
+			 	struct lr0_set* fset, * fset2;
 				if(found_empty){
 				    size_t tr_tvl;
 				    tr_tvl = get_symb_tval(get_symb_by_pos(temprul,0));
-				    for(int v=0;v<follows->array[tr_tvl]->used;v++){
+				    fset = get_set_by_pos(follows,tr_tvl);
+				    for(int v=0;v<fset->used;v++){
 #ifdef debug_print
-					   	printf("adding item %d to FOLLOW of head rule symbol which has %d\n",v,get_item_pos(get_item_by_pos(follows->array[tr_tvl],v)));
+					   	printf("adding item %d to FOLLOW of head rule symbol which has %d\n",v,get_item_pos(get_item_by_pos(fset,v)));
 #endif
-					   	citem = get_item_by_pos(follows->array[tr_tvl],v);
-					   if(!item_is_in_set(citem,follows->array[symtvl])){
+					   	citem = get_item_by_pos(fset,v);
+					   fset2 = get_set_by_pos(follows,symtvl);
+					   if(!item_is_in_set(citem,fset2)){
 #ifdef debug_print
 					  printf("item wasn't in set, so really adding\n");
 #endif
-						  add_item_to_set(follows->array[symtvl],citem);
+						  add_item_to_set(fset2,citem);
 					   }
 				    }
 				}
@@ -466,13 +469,15 @@ struct lr0_array_set* get_follow_set(struct lr0_array_set* canon,gr_tbl_t* gramm
 #endif
 				    size_t tr_tvl;
 				    tr_tvl = get_symb_tval(get_symb_by_pos(temprul,0));
-				    for(int v=0;v<follows->array[tr_tvl]->used;v++){
+				    fset = get_set_by_pos(follows,tr_tvl);
+				    fset2 = get_set_by_pos(follows,symtvl);
+				    for(int v=0;v<fset->used;v++){
 #ifdef debug_print
-					    printf("adding item %d to FOLLOW of head rule symbol which has 	%d\n",v,get_item_pos(get_item_by_pos(follows->array[tr_tvl],v));
+					    printf("adding item %d to FOLLOW of head rule symbol which has 	%d\n",v,get_item_pos(get_item_by_pos(fset,v));
 #endif
-					   citem = get_item_by_pos(follows->array[tr_tvl],v);
-					   	if(!item_is_in_set(citem,follows->array[symtvl]))
-						  	add_item_to_set(follows->array[symtvl],citem);
+					   citem = get_item_by_pos(fset,v);
+					   	if(!item_is_in_set(citem,fset2))
+						  	add_item_to_set(fset2,citem);
 				    	}
 				    break;
 				}
@@ -493,10 +498,12 @@ void fill_action_table(struct parser_tables_s* ptable,gr_tbl_t* grammar_table, s
     printf("filling action table\n");
     for(int i=0;i<canon->used;i++){
 	   printf("set %d out of %zu\n",i,canon->used);
-	   for(int j=0;j<canon->array[i]->used;j++){
-		  printf("symbol %d out of %lu\n",j,canon->array[i]->used);
+	   struct lr0_set* fset;
+	   fset = get_set_by_pos(canon,i);
+	   for(int j=0;j<fset->used;j++){
+		  printf("symbol %d out of %lu\n",j,fset->used);
 		  struct lr0_item* litem;
-		  litem = get_item_by_pos(canon->array[i],j);
+		  litem = get_item_by_pos(fset,j);
 		  int rule = get_item_rul(litem);
 		  int pos = get_item_pos(litem);
 		  if(rule == 0 && pos ==2){
@@ -512,7 +519,7 @@ void fill_action_table(struct parser_tables_s* ptable,gr_tbl_t* grammar_table, s
 			 if(tok_type == TERMINAL){
 				struct lr0_set* gt_set;
 			 	printf("found terminal %s in state set\n",get_symb_nam(tsymt));
-				gt_set = GOTO(canon->array[i],tok_val,universe_set, grammar_table);
+				gt_set = GOTO(fset,tok_val,universe_set, grammar_table);
 				int in_ra = set_is_in_array(gt_set,canon);
 				size_t ttnum;
 				ttnum = get_tok_termnum(get_tok_by_id(grammar_table->tokens,tok_val));
@@ -538,14 +545,16 @@ void fill_action_table(struct parser_tables_s* ptable,gr_tbl_t* grammar_table, s
 			 symb_t* exsymb;
 			 exrul = get_rul_by_pos(grammar_table,rule);
 			 exsymb = get_symb_by_pos(exrul,0);
+			 struct lr0_set* fset;
 			 if(pos == exrul->used){
 				printf("found the end of rule empty string\n");
 				size_t tok_index = get_symb_tval(exsymb);
+				fset = get_set_by_pos(follows,tok_index);
 				if(tok_index !=0){
-				    for(int b=0;b<follows->array[tok_index]->used;b++){
+				    for(int b=0;b<fset->used;b++){
 					   	printf("going through follow array of %s, symbol %d\n",get_symb_nam(exsymb),b);
 					   struct lr0_item* qitem;
-					   qitem = get_item_by_pos(follows->array[tok_index],b);
+					   qitem = get_item_by_pos(fset,b);
 					   	if(get_item_pos(qitem) != DOLLAR){
 						    size_t thetnum;
 						    thetnum = get_tok_termnum(get_item_tok(qitem));
@@ -588,9 +597,11 @@ void fill_action_table(struct parser_tables_s* ptable,gr_tbl_t* grammar_table, s
 	   printf("GOTO table construction with symbol %d\n",m);
 	   if(get_tok_type(rttok) == NONTERMINAL){
 		  printf("symbol is a nonterminal, continuing\n");
+		  struct lr0_set* hset;
 		  for(int h=0;h<canon->used;h++){
+			 hset = get_set_by_pos(canon,h);
 			 printf("going through states, on %d\n",h);
-			 gt_set = GOTO(canon->array[h],get_tok_tval(rttok),universe_set, grammar_table);
+			 gt_set = GOTO(hset,get_tok_tval(rttok),universe_set, grammar_table);
 			 int in_ra = set_is_in_array(gt_set,canon);
 			 if(in_ra != -1){
 				size_t termval = get_tok_termnum(rttok);
