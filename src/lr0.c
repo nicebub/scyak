@@ -16,36 +16,36 @@ struct lr0_item* create_lr0_item(uint8_t rule ,uint8_t pos,symb_t* symbol){
 	return it;
 }
 
-uint8_t get_item_rul(struct lr0_item* item){
+inline uint8_t get_item_rul(struct lr0_item* item){
     if(!item) return -1;
     return item->rule;
 }
-uint8_t get_item_pos(struct lr0_item* item){
+inline uint8_t get_item_pos(struct lr0_item* item){
     if(!item) return -1;
     return item->pos;
 }
-symb_t* get_item_symb(struct lr0_item* item){
+inline symb_t* get_item_symb(struct lr0_item* item){
     if(!item) return NULL;
     return item->symbol;
 }
-tok_tbl_t* get_item_tok(struct lr0_item* item){
+inline tok_tbl_t* get_item_tok(struct lr0_item* item){
     if(!item) return NULL;
     return item->token;
 }
 
-void set_item_rul(struct lr0_item* item,uint8_t rule){
+inline void set_item_rul(struct lr0_item* item,uint8_t rule){
     if(!item) return;
     item->rule = rule;
 }
-void set_item_pos(struct lr0_item* item, uint8_t pos){
+inline void set_item_pos(struct lr0_item* item, uint8_t pos){
     if(!item) return;
     item->pos = pos;
 }
-void set_item_symb(struct lr0_item* item,symb_t* symbol){
+inline void set_item_symb(struct lr0_item* item,symb_t* symbol){
     if(!item) return;
     item->symbol = symbol;
 }
-void set_item_tok(struct lr0_item* item,tok_tbl_t* token){
+inline void set_item_tok(struct lr0_item* item,tok_tbl_t* token){
     if(!item) return;
     item->token = token;
 }
@@ -72,7 +72,7 @@ struct lr0_item* copy_lr0_item(struct lr0_item* in_item){
 	return out_item;
 }
 
-int items_are_equal(struct lr0_item* item1, struct lr0_item* item2){
+inline int items_are_equal(struct lr0_item* item1, struct lr0_item* item2){
 	if(!item1 || !item2) return 0;
 	return (item1->pos!=item2->pos)?0:(item1->rule!=item2->rule)?0:1;
 }
@@ -226,9 +226,8 @@ inline struct lr0_set* get_set_by_pos(struct lr0_array_set* array, size_t pos){
     return array->array[pos];
 }
 
-void set_array_set_by_pos(struct lr0_array_set* array, size_t pos, struct lr0_set* inset){
+inline void set_array_set_by_pos(struct lr0_array_set* array, size_t pos, struct lr0_set* inset){
     if(!array) return;
-//    if(!array->array || array->used <=0) return;
     array->array[pos] = inset;
 }
 

@@ -261,7 +261,7 @@ int definition(FILE* specfile){
 			typ_tok = option_type(specfile);
 			next_token();
 			tag_tok = optional_tag(specfile);
-			ident_list(specfile);
+			ident_list(typ_tok,specfile);
 			break;
 	}
 	return RETVAL;
@@ -323,10 +323,10 @@ int optional_tag(FILE* specfile){
 	}
 		return RETVAL;
 }
-int ident_list(FILE* specfile){
+int ident_list(int typ_tok, FILE* specfile){
 	while(current_tok != MARK){
 	    /* replace with input token != MARK '%% */
-combo:		identcombo(specfile);
+combo:		identcombo(typ_tok,specfile);
 		switch(current_tok){
 			case UNION:
 			case START:
@@ -375,7 +375,7 @@ combo:		identcombo(specfile);
 leaveloop:
 	return RETVAL;
 }
-int identcombo(FILE* specfile){
+int identcombo(int typ_tok,FILE* specfile){
 	add_token_decls();
     size_t slen;
 

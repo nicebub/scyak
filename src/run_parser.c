@@ -26,36 +26,28 @@ void run_parser(struct parser_tables_s* ptable){
     tokn = mlexer(thefile);
     printf("token %d\n",tokn);
     while(1){
-	   switch(tokn){
-/*		  case -1:
-			 printf("error in parsing??\n");
-			 goto pender;
-			 break;*/
+	   switch(ptable->ACTION[*top][tokn].action){
+		  case SHIFT:
+			    printf("shifting\n");
+			    top++;
+			    *top = ptable->ACTION[*(top-1)][tokn].state;
+			    tokn = mlexer(thefile);
+			    break;
+		  case REDUCE:
+			    printf("reducing\n");
+			    ntindex = ptable->ACTION[*(top)][tokn].rule;
+			    printf("reduced by some production %d and head production %d num tokens %d\n",ptable->ACTION[*(top)][tokn].state,
+					 ptable->ACTION[*(top)][tokn].rule,ptable->ACTION[*(top)][tokn].numtoks);
+			    top = top - (ptable->ACTION[*top][tokn].numtoks-1);
+			    *top = ptable->GTTBL[*(top-1)][ntindex];
+			    break;
+		  case ACCEPT:
+			    printf("accepting\n");
+			    goto pender;
+			    break;
 		  default:
-			 switch(ptable->ACTION[*top][tokn].action){
-				case SHIFT:
-				    printf("shifting\n");
-				    top++;
-				    *top = ptable->ACTION[*(top-1)][tokn].state;
-				    tokn = mlexer(thefile);
-				    break;
-				case REDUCE:
-				    printf("reducing\n");
-				    ntindex = ptable->ACTION[*(top)][tokn].rule;
-				    printf("reduced by some production %d and head production %d num tokens %d\n",ptable->ACTION[*(top)][tokn].state,
-						 ptable->ACTION[*(top)][tokn].rule,ptable->ACTION[*(top)][tokn].numtoks);
-				    top = top - (ptable->ACTION[*top][tokn].numtoks-1);
-				    *top = ptable->GTTBL[*(top-1)][ntindex];
-				    break;
-				case ACCEPT:
-				    printf("accepting\n");
-				    goto pender;
-				    break;
-				default:
-				    printf("parsing error in parser loop\n");
-				    exit(EXIT_FAILURE);
-			 }
-			 break;
+			    printf("parsing error: found error as value in table\n");
+			    exit(EXIT_FAILURE);
 	   }
     }
 pender:
