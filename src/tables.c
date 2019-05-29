@@ -46,8 +46,25 @@ tok_tbl_t* get_tok_by_id(tok_tbl_t* inarray, size_t id){
     if(!inarray) return NULL;
     return &(inarray[id]);
 }
+inline int8_t get_tok_assoc(tok_tbl_t* token){
+    if(!token) return -1;
+    return token->assoc;
+}
+inline int8_t get_tok_prec(tok_tbl_t* token){
+    if(!token) return -1;
+    return token->prec;
+}
+inline void set_tok_assoc(tok_tbl_t* token, int8_t ass){
+    if(!token) return;
+    token->assoc = ass;
 
-symb_t * create_symb(char* name,tok_tab_t val){
+}
+inline void set_tok_prec(tok_tbl_t* token, int8_t prec){
+    if(!token) return;
+    token->prec = prec;
+}
+
+symb_t * create_symb(tok_tab_t* name,tok_tab_t val){
 	symb_t* temp;
     size_t slen;
 	temp = malloc(sizeof(symb_t));
@@ -126,8 +143,24 @@ inline void set_symb_val(symb_t* symbol, tok_tab_t val){
     if(!symbol) return;
     symbol->val = val;
 }
+int8_t get_rul_assoc(rule_t* rule){
+    if(!rule) return -1;
+    return rule->assoc;
+}
+int8_t get_rul_prec(rule_t* rule){
+    if(!rule) return -1;
+    return rule->prec;
+}
+void set_rul_assoc(rule_t* rule, int8_t ass){
+    if(!rule) return;
+    rule->assoc = ass;
+}
+void set_rul_prec(rule_t* rule, int8_t prec){
+    if(!rule) return;
+    rule->prec = prec;
+}
 
-rule_t * create_grrul(char* name, size_t size){
+rule_t * create_grrul(tok_tab_t* name, size_t size){
 	rule_t* temp;
     size_t slen;
 	temp = malloc(sizeof(rule_t));
@@ -147,6 +180,8 @@ rule_t * create_grrul(char* name, size_t size){
 		temp->symbols[i] = NULL;
 	temp->used = 0;
 	temp->num_symbs = size;
+    	temp->assoc = -1;
+    	temp->prec = -1;
 	return temp;
 	
 }
@@ -190,7 +225,8 @@ void print_tok(tok_tbl_t* intok){
 		printf("NULL token\n");
 		return;
 	}
-    printf("Token %s: val:%d type: %zu\n",get_tok_nam(intok),get_tok_val(intok),get_tok_type(intok));
+    printf("Token %s: val:%d type: %zu prec:%d assoc:%d tval:%zu termnum:%zu\n",
+		 get_tok_nam(intok),get_tok_val(intok),get_tok_type(intok),get_tok_prec(intok),get_tok_assoc(intok),get_tok_tval(intok),get_tok_termnum(intok));
 	return;
 }
 void print_tok_array(tok_tbl_t* inarray,size_t used){
@@ -209,8 +245,8 @@ void print_symbol(symb_t * symbol){
 		printf("NULL SYMBOL\n");
 		return;
 	}
-    printf("Symbol--Name:%s tok_val: %d attribs max: %zu \n",symbol->name,
-				symbol->val,symbol->num_attribs);
+    printf("Symbol--Name:%s tok_val: %d attribs max: %zu tval: %zu\n",symbol->name,
+				symbol->val,symbol->num_attribs,symbol->tval);
 	return;
 }
 void print_rule(rule_t* rule){
@@ -218,7 +254,8 @@ void print_rule(rule_t* rule){
 		printf("NULL RULE\n");
 		return;
 	}
-    printf("Rule--#symbs used: %zu symb max: %zu\n",rule->used, rule->num_symbs);
+    printf("Rule--#symbs used: %zu symb max: %zu prec:%d assoc:%d\n",
+		 rule->used, rule->num_symbs,rule->prec,rule->assoc);
 	for(int i=0;i<rule->used;i++){
 		printf("Symbol %d: ", i);
 		print_symbol((rule->symbols[i]));
@@ -246,7 +283,7 @@ void add_rule_to_table(gr_tbl_t * table, rule_t* rule){
 	table->used++;
 }
 
-gr_tbl_t * create_grtbl(char* name,size_t size){
+gr_tbl_t * create_grtbl(tok_tab_t* name,size_t size){
 	gr_tbl_t * table = malloc(sizeof(gr_tbl_t));
     	if(!table){
 	   perror("in create grtbl");

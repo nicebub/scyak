@@ -26,6 +26,7 @@ void run_parser(struct parser_tables_s* ptable){
     tokn = mlexer(thefile);
     printf("token %d\n",tokn);
     while(1){
+	   printf("currently in state %d\n",*top);
 	   switch(ptable->ACTION[*top][tokn].action){
 		  case SHIFT:
 			    printf("shifting\n");

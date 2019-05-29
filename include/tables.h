@@ -20,26 +20,32 @@
 #define TERMINAL 1
 #define NONTERMINAL 2
 
-
-struct attribute_s 
+struct attribute_s
 {
-	tok_tab_t * name;
-	tok_tab_t val;
-	u_int8_t type;
+    tok_tab_t * name;
+    tok_tab_t val;
+};
+#define attr_t struct attribute_s
+struct tok_tbl_s
+{
     	size_t tval;
     	size_t termnum;
+	tok_tab_t * name;
+	tok_tab_t val;
+    	u_int8_t assoc;
+    	int8_t prec;
+	int8_t type;
 };
 
-#define attr_t struct attribute_s
-#define tok_tbl_t struct attribute_s
+#define tok_tbl_t struct tok_tbl_s
 
 struct symbol_s
 {
 	size_t num_attribs;
+    	size_t tval;
 	attr_t * attribs; /* array of attribute structs */
 	tok_tab_t * name;
 	tok_tab_t val;
-    	size_t tval;
 };
 
 #define symb_t struct symbol_s
@@ -48,7 +54,9 @@ struct rule_s
 {
 	size_t num_symbs;
 	size_t used;
-	symb_t ** symbols;
+    	symb_t ** symbols;
+    	int8_t prec;
+    	int8_t assoc;
 };
 
 #define rule_t struct rule_s
@@ -83,6 +91,10 @@ void set_tok_termnum(tok_tbl_t* token, size_t term);
 void print_tok(tok_tbl_t* intok);
 tok_tbl_t* get_tok_by_id(tok_tbl_t* inarray, size_t id);
 void print_tok_array(tok_tbl_t* inarray,size_t used);
+int8_t get_tok_assoc(tok_tbl_t* token);
+int8_t get_tok_prec(tok_tbl_t* token);
+void set_tok_assoc(tok_tbl_t* token, int8_t ass);
+void set_tok_prec(tok_tbl_t* token, int8_t prec);
 /* end token methods */
 
 /* symbols */
@@ -90,7 +102,7 @@ attr_t* get_symb_attrib(symb_t* symbol);
 tok_tab_t* get_symb_nam(symb_t* symbol);
 tok_tab_t get_symb_val(symb_t* symbol);
 size_t get_symb_tval(symb_t* in_symb);
-symb_t * create_symb(char* name, tok_tab_t val);
+symb_t * create_symb(tok_tab_t* name, tok_tab_t val);
 size_t get_symb_num_attrib(symb_t* symbol);
 void set_symb_attrib(symb_t* symbol, attr_t* attribs);
 void set_symb_nam(symb_t* symbol, tok_tab_t* name);
@@ -101,17 +113,21 @@ void print_symbol(symb_t * symbol);
 /* end symbol methods */
 
 /* rule */
-rule_t * create_grrul(char* name, size_t size);
+rule_t * create_grrul(tok_tab_t* name, size_t size);
 void add_symb_to_rule(rule_t* rule,symb_t * symbol);
 void print_rule(rule_t* rule);
 symb_t* get_symb_by_pos(rule_t* rule, size_t pos);
 /* end rule methods */
 /* table */
-gr_tbl_t * create_grtbl(char* name,size_t size);
+gr_tbl_t * create_grtbl(tok_tab_t* name,size_t size);
 void add_rule_to_table(gr_tbl_t * table, rule_t* rule);
 void calculate_num_terms(gr_tbl_t* grammar_table);
 void print_gr_table(gr_tbl_t * table);
 rule_t* get_rul_by_pos(gr_tbl_t* table, size_t pos);
+int8_t get_rul_assoc(rule_t* rule);
+int8_t get_rul_prec(rule_t* rule);
+void set_rul_assoc(rule_t* rule, int8_t ass);
+void set_rul_prec(rule_t* rule, int8_t prec);
 /* end table methods */
 
 

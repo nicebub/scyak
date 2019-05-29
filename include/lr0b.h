@@ -16,11 +16,11 @@ struct action_s
 
 struct parser_tables_s
 {
-    struct action_s ** ACTION;
-    int ** GTTBL;
     size_t num_states;
     size_t num_terms;
     size_t num_nonterms;
+    struct action_s ** ACTION;
+    int ** GTTBL;
 };
 
 

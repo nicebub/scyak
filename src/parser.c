@@ -80,7 +80,6 @@ extern char sctext[];
 							check_for_empty_rule(temp_rules);\
 							rulebody(specfile,temp_rules); \
 							optional_precision(specfile,temp_rules)
-								
 
 #define process_codeblock() \
 							printf("found { start of code\n"); \
@@ -100,6 +99,7 @@ const static char rs[] = "RealStart";
 const static char rl[] = "rule";
 gr_tbl_t *grammar_table;
 size_t num_code_sects;
+extern  u_int8_t prec_count; /*  precedence counter defined in functions.c */
 /* Function Definitions */
 struct parser_tables_s* read_and_parse_specfile(FILE* specfile){
 	struct lr0_array_set* canon;
@@ -110,16 +110,22 @@ struct parser_tables_s* read_and_parse_specfile(FILE* specfile){
 	add_rule_decls();
 	num_code_sects = 0;
 	canon = NULL;
+    	prec_count = 1;
 
 	printf("Parser starting..\n");
     	slen = sizeof(tok_tbl_t)*MAX_TOKS;
-
     	grammar_table->tokens = malloc(slen);
     	if(!grammar_table->tokens){
 	   perror("in read and parse specfile creating tokens\n");
 	   exit(EXIT_FAILURE);
     	}
     memset(grammar_table->tokens,0,slen);
+    tok_tbl_t* btok;
+    for(int a=0;a<MAX_TOKS;a++){
+	   btok = get_tok_by_id(grammar_table->tokens,a);
+	   set_tok_assoc(btok,-1);
+	   set_tok_prec(btok,-1);
+    }
     grammar_table->num_toks = MAX_TOKS;
     create_token("S'",REALSTART,NONTERMINAL,0);
 
@@ -153,6 +159,9 @@ struct parser_tables_s* read_and_parse_specfile(FILE* specfile){
     
 	add_symb_to_rule(get_rul_by_pos(grammar_table,0),get_symb_by_pos(get_rul_by_pos(grammar_table,1),0));
     	calculate_num_terms(grammar_table);
+    /* here add calculate rule prec and assoc */
+    for(int g=0;g<grammar_table->used;g++)
+	   finalize_rule_prec(get_rul_by_pos(grammar_table,g),grammar_table);
     	canon = items(grammar_table);
     	ptables = create_action_n_goto_tbls(canon,grammar_table);
     	fill_action_table(ptables,grammar_table,canon);
@@ -228,7 +237,7 @@ int definition(FILE* specfile){
 		   /* '%{'  token, read all code looking for  token '%}'
 					if find EOF or potentiall MARK '%%' then error occurs */
 			next_token();
-		   	printf("start of code\n");
+		   printf("start of definition code section %%{ %%}\n");
 		   	while(1){
 			  switch(current_tok){
 				 case RMARK:
@@ -262,6 +271,7 @@ int definition(FILE* specfile){
 			next_token();
 			tag_tok = optional_tag(specfile);
 			ident_list(typ_tok,specfile);
+		   	prec_count++;
 			break;
 	}
 	return RETVAL;
@@ -378,13 +388,27 @@ leaveloop:
 int identcombo(int typ_tok,FILE* specfile){
 	add_token_decls();
     size_t slen;
+    size_t ndx;
+    tok_tab_t tval;
+    tok_tbl_t* ttok;
 
 	switch(current_tok){
 		   /* input token value goes here */
 		case IDENT:
 		   /* IDENTIFIER token */
 		   create_token(cur_text,current_tok,TERMINAL,1);
-
+		   if(typ_tok != TYPE)
+			  set_tok_prec(get_tok_by_id(grammar_table->tokens,new_tok_val),prec_count);
+		   switch(typ_tok){
+			  case TYPE:
+			  case TOKEN:
+				 break;
+			  case LEFT:
+			  case RIGHT:
+			  case NONASSOC:
+				 set_tok_assoc(get_tok_by_id(grammar_table->tokens,new_tok_val),typ_tok);
+				 break;
+		   }
 #ifdef debug_print
 		   printf("newtokval:%d\n",new_tok_val);
 		   printf("temp_tok_nam: %s\n",temp_tok_nam);
@@ -395,12 +419,13 @@ int identcombo(int typ_tok,FILE* specfile){
 
 		   if(current_tok == INTEGER){
 			  /* next input token is NUMBER then */
-			  size_t ndx = grammar_table->tokused-1;
-			  tok_tbl_t* ttok = get_tok_by_id(grammar_table->tokens,ndx);
-			  tok_tab_t tval = get_tok_val(ttok);
+			  ndx = grammar_table->tokused-1;
+			  ttok = get_tok_by_id(grammar_table->tokens,ndx);
+			  tval = get_tok_val(ttok);
 
 #ifdef debug_print
-			  tok_tab_t* tnam = get_tok_nam(ttok);
+			  tok_tab_t* tnam;
+			  tnam = get_tok_nam(ttok);
 			  printf("top token in tokens: %s\n",tnam);
 			  printf("integer value of token given: %d\n",atoi(cur_text));
 			  printf("last token before %s: %d\n",tnam,tval);
@@ -503,7 +528,8 @@ int rulebody(FILE* specfile, rule_t* temp_rules){
 			   gen_symb_to_rule;
 			   print_gr_table(grammar_table);
 			   break;
-			case LCBRA: 
+			case LCBRA:
+			   printf("found code in rulebody\n");
 			   process_codeblock()
 			   /*  a ';' will cause error with next statements */
 			   else if(current_tok == MARK)
@@ -532,6 +558,9 @@ int rulebody(FILE* specfile, rule_t* temp_rules){
 }
 int optional_precision(FILE* specfile,rule_t* temp_rules){
 	add_token_decls();
+    	int found_tok;
+    	u_int8_t tprec,tassoc;
+    tok_tbl_t* tb_ptr;
 
 	while(1){
 	    /* input token != EOF, != MARK '%%' */
@@ -554,9 +583,18 @@ int optional_precision(FILE* specfile,rule_t* temp_rules){
 					   printf("found semicolon\n");
 					   break;
 					case IDENT:
+					   found_tok = tok_exists(cur_text,grammar_table);
+					   if(found_tok){
+						  tb_ptr = get_tok_by_id(grammar_table->tokens,found_tok);
+						  tprec = get_tok_prec(tb_ptr);
+						  tassoc = get_tok_prec(tb_ptr);
+						  set_rul_prec(temp_rules,tprec);
+						  set_rul_assoc(temp_rules,tassoc);
+					   }
 					/* read IDENTIFER token or error */
 					   next_token();
 					   if(current_tok == LCBRA){
+						  printf("found code in optional precision\n");
 							process_codeblock()
 						  /*  a ';' will cause error with next statements */
 							/* if input token == '{' we found code to process
@@ -566,9 +604,9 @@ int optional_precision(FILE* specfile,rule_t* temp_rules){
 								;
 							else
 								;
-						}
-						default:
-					   		break;
+					   }
+				    default:
+					   break;
 				}
 						break;
 			case SEMICOLON:

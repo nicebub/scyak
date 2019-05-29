@@ -8,27 +8,27 @@
 #define ARR_INC_SIZE 10
 struct lr0_item
 {
+    	symb_t* 		symbol;
+    	tok_tbl_t* 	token;
 	uint8_t 		rule;
 	uint8_t 		pos;
-	symb_t* 		symbol;
-    	tok_tbl_t* 	token;
 };
 
 /* set of above lr(0) items and how many allocated and used */
 struct lr0_set
 {
+    	size_t 			num_items;
+    	size_t 			used;
 	struct lr0_item ** 	items;
-	size_t 			num_items;
-	size_t 			used;
 };
 
 
 /* array or set of sets of lr(0) items and the allocated and number used */
 struct lr0_array_set
 {
+    	size_t 			num_sets;
+    	size_t 			used;
 	struct lr0_set ** 	array;
-	size_t 			num_sets;
-	size_t 			used;
 };
 
 

@@ -418,15 +418,20 @@ struct lr0_array_set* get_follow_set(struct lr0_array_set* canon,gr_tbl_t* gramm
 }
 void fill_action_table(struct parser_tables_s* ptable,gr_tbl_t* grammar_table,struct lr0_array_set* canon)
 {
-    size_t tok_val,tok_type,ttnum,thetnum,tok_index,using_index,termval;
+    size_t tok_val,tok_type,ttnum,thetnum,hd_o_rl_tvl,using_index,termval;
     struct lr0_array_set* follows;
     struct lr0_item* litem, *qitem;
     struct lr0_set* fset, *gt_set, *hset;
-    symb_t* tsymt, *exsymb;
+    symb_t* tsymt, *hed_o_rl_symb;
     rule_t* tem_rul;
     tok_tbl_t* tem_token, *rttok;
+    int8_t nprec;
+    rule_t* prec_rul;
     int rule,pos,in_ra;
-
+    printf("working with these tokens\n");
+    print_tok_array(grammar_table->tokens,grammar_table->tokused);
+    printf("here are the rules again");
+    print_gr_table(grammar_table);
     follows = get_follow_set(canon,grammar_table);
     printf("working with this follow set\n");
     print_lr0_array(follows);
@@ -446,12 +451,14 @@ void fill_action_table(struct parser_tables_s* ptable,gr_tbl_t* grammar_table,st
 			 printf("found End of Start rule\n");
 			 ptable->ACTION[i][ptable->num_terms-1].action = ACCEPT;
 		  }
-		  if(get_symb_val(get_item_symb(litem)) != EMPTY){
+		  tsymt = get_item_symb(litem);
+		  if(get_symb_val(tsymt) != EMPTY){
 			 printf("symbol is not empty\n");
-			 tsymt = get_symb_by_pos(tem_rul,pos);
 			 tok_val = get_symb_tval(tsymt);
 			 tem_token = get_tok_by_id(grammar_table->tokens,tok_val);
 			 tok_type = get_tok_type(tem_token);
+//			 tsymt =
+//			 tsymt = get_symb_by_pos(tem_rul,pos);
 			 if(tok_type == TERMINAL){
 			 	printf("found terminal %s in state set\n",get_symb_nam(tsymt));
 				gt_set = GOTO(fset,tok_val,universe_set, grammar_table);
@@ -464,16 +471,54 @@ void fill_action_table(struct parser_tables_s* ptable,gr_tbl_t* grammar_table,st
 						  	ptable->ACTION[i][ttnum].action = SHIFT;
 					}
 					else{
-						  printf("possibly parsing confict, already at %d?\n",ptable->ACTION[i][ttnum].action);
+					    printf("possibly parsing confict, already at %d?\n",ptable->ACTION[i][ttnum].action);
 					    switch(ptable->ACTION[i][ttnum].action){
 						   case REDUCE:
-							  printf("shift/reduce replacing reduce w/shift\n");
-							  ptable->ACTION[i][ttnum].state = in_ra;
-							  ptable->ACTION[i][ttnum].action = SHIFT;
+							  prec_rul = get_rul_by_pos(grammar_table,ptable->ACTION[i][ttnum].state);
+							  nprec = get_rul_prec(prec_rul);
+							  if(nprec == -1){
+								 printf("going to default resolution techniques\n");
+								 printf("shift/reduce replacing reduce w/shift\n");
+								 ptable->ACTION[i][ttnum].state = in_ra;
+								 ptable->ACTION[i][ttnum].action = SHIFT;
+							  }
+							  else{
+								 printf("using precedence and associativity rules\n");
+								 uint8_t cprec = get_tok_prec(tem_token);
+								 if(nprec < cprec){
+									printf("incoming token has higher precedence, shift\n");
+									ptable->ACTION[i][ttnum].state = in_ra;
+									ptable->ACTION[i][ttnum].action = SHIFT;
+								 }
+								 else if(nprec == cprec){
+									printf("same precedence, checking associativity\n");
+									switch(get_rul_assoc(prec_rul)){
+									    case LEFT:
+										   printf("left assoc so keeping reduce\n");
+										   break;
+									    case RIGHT:
+										   printf("right assoc so doing shift instead\n");
+										   ptable->ACTION[i][ttnum].state = in_ra;
+										   ptable->ACTION[i][ttnum].action = SHIFT;
+										   break;
+									    case NONASSOC:
+										   printf("nonassoc, shouldn't have conflict error\n");
+										   exit(EXIT_FAILURE);
+										   break;
+									    default:
+										   printf("error, unknown associativity\n");
+										   exit(EXIT_FAILURE);
+										   break;
+									}
+								 }
+								 else{
+									printf("left token has higher precedence, keeping reduce\n");
+								 }
+							  }
 							  break;
 						   default:
-							  printf("shift/shift no conflict\n");
-							  break;
+								 printf("shift/shift no conflict\n");
+								 break;
 					    }
 //						  exit(EXIT_FAILURE);
 					}
@@ -486,18 +531,23 @@ void fill_action_table(struct parser_tables_s* ptable,gr_tbl_t* grammar_table,st
 		  }
 		  else{
 			 struct lr0_set* fset;
+	//		 tok_val = get_symb_tval(tsymt);
+	//		 tem_token = get_tok_by_id(grammar_table->tokens,tok_val);
+	//		 tok_type = get_tok_type(tem_token);
 	//		 exrul = get_rul_by_pos(grammar_table,rule);
-			 exsymb = get_symb_by_pos(tem_rul,0);
+			 hed_o_rl_symb = get_symb_by_pos(tem_rul,0);
 			 
 			 if(pos == tem_rul->used){
 				printf("found the end of rule empty string\n");
-				tok_index = get_symb_tval(exsymb);
-				fset = get_set_by_pos(follows,tok_index);
-				if(tok_index !=0){
+				hd_o_rl_tvl = get_symb_tval(hed_o_rl_symb);
+				fset = get_set_by_pos(follows,hd_o_rl_tvl);
+				if(hd_o_rl_tvl !=0){
 				    for(int b=0;b<fset->used;b++){
-					   	printf("going through follow array of %s, symbol %d\n",get_symb_nam(exsymb),b);
+					   	printf("going through follow array of %s, symbol %d\n",get_symb_nam(hed_o_rl_symb),b);
 					   qitem = get_item_by_pos(fset,b);
-					   thetnum = get_tok_termnum(get_item_tok(qitem));
+					   tok_tbl_t* lastok;
+					   lastok = get_item_tok(qitem);
+					   thetnum = get_tok_termnum(lastok);
 					   	if(get_item_pos(qitem) != DOLLAR){
 						    using_index = thetnum;
 				    		}
@@ -506,31 +556,77 @@ void fill_action_table(struct parser_tables_s* ptable,gr_tbl_t* grammar_table,st
 						    using_index = ptable->num_terms-1;
 				    		}
 					   if(ptable->ACTION[i][using_index].action == AERROR){
-						  printf("setting ACTION table to REDUCE %d by rule %d to state %zu num symbols to pop %lu\n",REDUCE,rule,tok_index,tem_rul->used-1);
+						  printf("setting ACTION table to REDUCE %d by rule %d to state %zu num symbols to pop %lu\n",REDUCE,rule,hd_o_rl_tvl,tem_rul->used-1);
 						  ptable->ACTION[i][using_index].action = REDUCE;
 						  ptable->ACTION[i][using_index].state = rule;
-						  ptable->ACTION[i][using_index].rule = get_tok_termnum(get_tok_by_id(grammar_table->tokens,tok_index));
+						  ptable->ACTION[i][using_index].rule = get_tok_termnum(get_tok_by_id(grammar_table->tokens,hd_o_rl_tvl));
 						  ptable->ACTION[i][using_index].numtoks = tem_rul->used-1;
 					   }
 					   else{
 						  printf("possibly parsing confict?\n");
-						  switch(ptable->ACTION[i][using_index].action){
-							 case REDUCE:
-								printf("reduce/reduce\n");
-								if(ptable->ACTION[i][using_index].state > rule){
-								    printf("replacing action from earlier rule\n");
-								    ptable->ACTION[i][using_index].action = REDUCE;
-								    ptable->ACTION[i][using_index].state = rule;
-								    ptable->ACTION[i][using_index].rule = get_tok_termnum(get_tok_by_id(grammar_table->tokens,tok_index));
-								    ptable->ACTION[i][using_index].numtoks = tem_rul->used-1;
-								}
+							 switch(ptable->ACTION[i][using_index].action){
+								case REDUCE:
+								    printf("going to default resolution techniques\n");
+								    printf("reduce/reduce\n");
+								    if(ptable->ACTION[i][using_index].state > rule){
+									   printf("replacing action from earlier rule\n");
+									   ptable->ACTION[i][using_index].action = REDUCE;
+									   ptable->ACTION[i][using_index].state = rule;
+									   ptable->ACTION[i][using_index].rule = get_tok_termnum(get_tok_by_id(grammar_table->tokens,hd_o_rl_tvl));
+									   ptable->ACTION[i][using_index].numtoks = tem_rul->used-1;
+								    }
 //								ptable->ACTION[i][using_index].state = in_ra;
 //								ptable->ACTION[i][using_index].action = SHIFT;
-								break;
-							 default:
-								printf("shift/reduce, keeping existing shift\n");
-								break;
-						  }
+								    break;
+								default:
+								    prec_rul = get_rul_by_pos(grammar_table,ptable->ACTION[i][using_index].state);
+								    nprec = get_rul_prec(prec_rul);
+								    if( nprec == -1 ){
+									   	printf("shift/reduce, keeping existing shift\n");
+								    }
+								    else{
+									   printf("using precedence and associativity rules\n");
+/* */
+									   uint8_t cprec = get_tok_prec(lastok);
+									   if(nprec < cprec){
+										  printf("incoming token has higher precedence, keeping shift\n");
+//										  ptable->ACTION[i][using_index].state = in_ra;
+//										  ptable->ACTION[i][using_index].action = SHIFT;
+									   }
+									   else if(nprec == cprec){
+										  printf("same precedence, checking associativity\n");
+										  switch(get_rul_assoc(prec_rul)){
+											 case LEFT:
+												printf("left assoc so reducing\n");
+												ptable->ACTION[i][using_index].action = REDUCE;
+												ptable->ACTION[i][using_index].state = rule;
+												ptable->ACTION[i][using_index].rule = get_tok_termnum(get_tok_by_id(grammar_table->tokens,hd_o_rl_tvl));
+												ptable->ACTION[i][using_index].numtoks = tem_rul->used-1;
+												break;
+											 case RIGHT:
+												printf("right assoc so doing keeping shift\n");
+												break;
+											 case NONASSOC:
+												printf("nonassoc, shouldn't have conflict error\n");
+												exit(EXIT_FAILURE);
+												break;
+											 default:
+												printf("error, unknown associativity\n");
+												exit(EXIT_FAILURE);
+												break;
+										  }
+									   }
+									   else{
+										  printf("left token has higher precedence, reducing\n");
+										  ptable->ACTION[i][using_index].action = REDUCE;
+										  ptable->ACTION[i][using_index].state = rule;
+										  ptable->ACTION[i][using_index].rule = get_tok_termnum(get_tok_by_id(grammar_table->tokens,hd_o_rl_tvl));
+										  ptable->ACTION[i][using_index].numtoks = tem_rul->used-1;
+									   }
+
+	/* */							    }
+								    break;
+							 }
 //						  exit(EXIT_FAILURE);
 					   }
 
