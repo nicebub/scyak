@@ -21,7 +21,7 @@ Returns: returns a token found or an error. stores input recognized for use by p
 
 Results: input stream is traversed and tokenized. The found lexeme is stored in a temp-
 orary variable */
-int sclex(FILE* infile);
+int sclex(FILE* scl_infile);
 /* Function Prototype
 
 	int get_id_for_symbol(char c);
@@ -35,7 +35,7 @@ Returns: an integer representation of a known alphabet symbol, or an error
 
 Results: either a symbol representation for the alphabet character is returned
 	 or an error, for further processing. */
-int get_id_for_symbol(char c);
+int get_id_for_symbol(char scl_c);
 /* Function Prototype
 
 	int is_in_final_states(int state);
@@ -51,7 +51,7 @@ Returns: an integer representation for BOOL
 
 Results: decides whether our input state is in the final state
 	set or not and return the answer to the caller */
-int is_in_final_states(int state);
+int is_in_final_states(int scl_state);
 
 /* \#\0\# tokens are replaced by different things in the file */
 
@@ -66,14 +66,14 @@ int is_in_final_states(int state);
 /* alphabet size, number of states of the DFA, accept_size defines the
  number of final states that we accept on, num_regex defines the number
  of actual regular expressions the DFA recognizes */
-#define asize 75 						//dfa->alphabet->used
-#define tsize 50						//dfa->num_states
-#define accept_size 17					//dfa->Fstates->used
-#define num_regex 16					//dfa->num_re
+#define scl_asize 75 						//dfa->alphabet->used
+#define scl_tsize 50						//dfa->num_states
+#define scl_accept_size 17					//dfa->Fstates->used
+#define scl_num_regex 16					//dfa->num_re
 	 /* The alphabet array */
-	 const static char al[asize] = { '\t', '\n', ' ', '%', ',', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ':', ';', '<', '>', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '_', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '{', '|', '}'	};
+	 const static char scl_al[scl_asize] = { '\t', '\n', ' ', '%', ',', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ':', ';', '<', '>', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '_', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '{', '|', '}'	};
 	 /* The DFA movement table */
-	 const static int table[asize][tsize] = {  {2,2,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1},
+	 const static int scl_table[scl_asize][scl_tsize] = {  {2,2,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1},
 {2,2,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1},
 {2,2,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1},
 {3,-1,8,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1},
@@ -150,9 +150,9 @@ int is_in_final_states(int state);
 {4,-1,17,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1}
  };
 	 /* Final states array - what states we accept on */
-	 const static int accepted[accept_size] = {  2,4,5,6,7,8,16,17,18,35,37,41,44,45,46,47,50 };
+	 const static int scl_accepted[scl_accept_size] = {  2,4,5,6,7,8,16,17,18,35,37,41,44,45,46,47,50 };
 	 /* which regular expression is attached to which accepting states */
-	 const static int each_re_accepted[num_regex][accept_size] = { {2},
+	 const static int scl_each_re_accepted[scl_num_regex][scl_accept_size] = { {2},
 {45},
 {47},
 {16},
@@ -170,7 +170,7 @@ int is_in_final_states(int state);
 {5,6}
  };
 	 /* The buffer we use to buffer the input file */
-	 static buffer * dbuf; 
+	 static buffer * scl_dbuf; 
 	 /* The temporary text buffer we use to store the matched text, lexeme
 	 	and make it available to the caller function */
 	 char sctext[100];
@@ -178,9 +178,9 @@ int is_in_final_states(int state);
 	 static int scleng;
 
 	 /* As defined above */
-int sclex(FILE* infile){
+int sclex(FILE* scl_infile){
 	
-	 char *endmatch;
+	 char *scl_endmatch;
 	 /*
 	 accepted = tells whether we have moved into an accept state
 	 failed = we have failed on the input somehow
@@ -191,59 +191,59 @@ int sclex(FILE* infile){
 	 id =
 	 c = current input character
 	 */
-	 int s, last, failed, accepted, count,done,id;
-	 char c;
-	 done = 1;
+	 int scl_s, scl_last, scl_failed, scl_accepted, scl_count,scl_done,scl_id;
+	 char scl_c;
+	 scl_done = 1;
 	 /* Come back to this label when we need go back to state 0 of the DFA
 	 	and reset some other variables */
 dstart:
 	/* Start at state 0 */
-	 s = failed = count = 0;
+	 scl_s = scl_failed = scl_count = 0;
 	 /* BOOL is somewhat reversed, and accepted 1 is false, 0 true */
-	 accepted = 1;
-	 last = s;
+	 scl_accepted = 1;
+	 scl_last = scl_s;
 	 /* only call and initialize buffer once */
-	 if(dbuf == NULL)
-		 dbuf = buffer_from_file(infile);
+	 if(scl_dbuf == NULL)
+		 scl_dbuf = buffer_from_file(scl_infile);
 	 /* point to back buffer pointer to keep track of fully found lexeme during
 	 	parsing algorithm */
-	 endmatch = dbuf->back;
-	 c = getchar(dbuf);
+	 scl_endmatch = scl_dbuf->back;
+	 scl_c = getchar(scl_dbuf);
 	 /* Only truly finish when done is true(1) */
-	 while(done != 0){
+	 while(scl_done != 0){
 		 /*  Either we have failed with an error, return the error token
 		 	or we're done we can't match, return the actual character
 		 	we can't match */
-		 if(accepted ==1 && failed ==1 && s == 0){
-			 if(done !=0){
+		 if(scl_accepted ==1 && scl_failed ==1 && scl_s == 0){
+			 if(scl_done !=0){
 				 return -1;
 			 }
-			 return c;
+			 return scl_c;
 		}
 		/* we're in an accept state and haven't flagged a failure yet */
-		if(accepted == 0 && failed == 1){
+		if(scl_accepted == 0 && scl_failed == 1){
 			/* store any matched input into our temporary character buffer */
-			for(char *j=dbuf->back;j<=endmatch;j++){
-				sctext[count] = *j;
-				count++;
+			for(char *j=scl_dbuf->back;j<=scl_endmatch;j++){
+				sctext[scl_count] = *j;
+				scl_count++;
 			}
 			/* NULL terminate the string */
-			sctext[count] = '\0';
+			sctext[scl_count] = '\0';
 			/* set the temporary lexem length for users to use */
-		    scleng = count;
+		    scleng = scl_count;
 			/* with some ugly programming, reset the cursors for continuing to 
 				read the rest of the input stream */
-			dbuf->back = endmatch+1;
-			endmatch = dbuf->back;
-			c = ungetchar(dbuf);
-			c = ungetchar(dbuf);
-			c = getchar(dbuf);
+			scl_dbuf->back = scl_endmatch+1;
+			scl_endmatch = scl_dbuf->back;
+			scl_c = ungetchar(scl_dbuf);
+			scl_c = ungetchar(scl_dbuf);
+			scl_c = getchar(scl_dbuf);
 			/* Find out which regular expression we just matched and then run its 
 				associated code that was included with the regular expression pattern
 				inside the specification file. */
-			for(int n=0;n<num_regex;n++){
-				for(int m=0;m<accept_size;m++){
-					if(each_re_accepted[n][m]-1 == s){
+			for(int n=0;n<scl_num_regex;n++){
+				for(int m=0;m<scl_accept_size;m++){
+					if(scl_each_re_accepted[n][m]-1 == scl_s){
 						/* Below we run the user-defined code */
 						switch(n){
 							case 0:
@@ -346,8 +346,8 @@ dstart:
 
 						/* The user-defined code is finished, reset the buffer and DFA
 							to continue and jump back start of the DFA with goto dstart */
-						if(*dbuf->forward == EOF || *dbuf->forward == '\0')
-							done = 0;
+						if(*scl_dbuf->forward == EOF || *scl_dbuf->forward == '\0')
+							scl_done = 0;
 						
 						goto dstart;
 						
@@ -360,72 +360,72 @@ dstart:
 			return 0;
 			
 		}
-	 	last = s;
+	 	scl_last = scl_s;
 		/* get next state to move to for the current input character */
-		id = get_id_for_symbol(c);
-		if( id != -1)
-		    s = table[id][s]-1;
+		scl_id = get_id_for_symbol(scl_c);
+		if( scl_id != -1)
+		    scl_s = scl_table[scl_id][scl_s]-1;
 		/* error pass it on */
 		else
-		    s = -1;
+		    scl_s = -1;
 		/* are we in an accept state and we haven't found a failure then return 0 */
-		if(is_in_final_states(s) == 0){
-			if(accepted == 0 && failed == 1){
+		if(is_in_final_states(scl_s) == 0){
+			if(scl_accepted == 0 && scl_failed == 1){
 				return 0;
 			}
 			/* we may have reached a failure and aren't really done so reset to 
 				try to match for another token */
-			accepted = 0;
-			endmatch = dbuf->forward -1;
+			scl_accepted = 0;
+			scl_endmatch = scl_dbuf->forward -1;
 		}
 		/* we are in an existing state, continue to run */
-		if(s >= 0 && s < tsize){
-			c = getchar(dbuf);
-		    endmatch++;
+		if(scl_s >= 0 && scl_s < scl_tsize){
+			scl_c = getchar(scl_dbuf);
+		    scl_endmatch++;
 		}
 		/* we aren't in an appropriate state for some reason so we need to try and
 			recover somehow */
 		else{
 			/* we didn't fail but we are in a weird state, recover, print the character
 				we couldn't match to standard output and reset DFA back to state 0 */
-		    if(failed == 1){
-			   printf("%c",c);
-			   c = getchar(dbuf);
-			   s=0;
-			   last = 0;
-			   dbuf->back++;
-			   endmatch++;
-			   failed = 0;
+		    if(scl_failed == 1){
+			   printf("%c",scl_c);
+			   scl_c = getchar(scl_dbuf);
+			   scl_s=0;
+			   scl_last = 0;
+			   scl_dbuf->back++;
+			   scl_endmatch++;
+			   scl_failed = 0;
 		    }
 			/* we failed so go back a state, reset the failed flag and back buffer pointer */
 		    else{
-			   s = last;
-			   failed = 1;
-			   endmatch--;
+			   scl_s = scl_last;
+			   scl_failed = 1;
+			   scl_endmatch--;
 		    }
 		}
 	 }
 	 /* Premature end of file or null character found so we return an error token */
-    	if(c == '\0' || c == EOF)
+    	if(scl_c == '\0' || scl_c == EOF)
 	    return -1;
 		/* all else fails we return the current input character we couldn't make any
 			sense of. */
-	 return c;
+	 return scl_c;
  }
 
  /* As defined above */
-int get_id_for_symbol(char c){
-	for(int a=0;a< asize;a++){
-		if(al[a] == c)
+int get_id_for_symbol(char scl_c){
+	for(int a=0;a< scl_asize;a++){
+		if(scl_al[a] == scl_c)
 			return a;
 	}
 	return -1;
 }
 
  /* As defined above */
-int is_in_final_states(int state){
-	for(int r=0;r<accept_size;r++){
-		if(accepted[r]-1 == state)
+int is_in_final_states(int scl_state){
+	for(int r=0;r<scl_accept_size;r++){
+		if(scl_accepted[r]-1 == scl_state)
 			return 0;
 	}
 	return 1;

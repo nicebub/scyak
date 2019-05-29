@@ -12,8 +12,8 @@
 extern char* yytext;
 #define cur_text yytext
 #else
-extern char sctext[];
-#define cur_text sctext
+ char sclex_text[];
+#define cur_text sclex_text
 #endif
 
 #define first_rule_length 2
@@ -148,9 +148,7 @@ struct parser_tables_s* read_and_parse_specfile(FILE* specfile){
 	
 	optional_definitions(specfile);
 	/* get token MARK '%%' */
-	if(current_tok == MARK)
-		;
-	else{
+	if(current_tok != MARK){
 		printf("Expecting %%%% Marker\n");
 		exit(EXIT_FAILURE);
 	}
@@ -176,8 +174,8 @@ inline int optional_definitions(FILE* specfile){
 	    /* input != MARK '%%' */
 		definition(specfile);
 		switch(current_tok){
-		    case MARK:
-			   break;
+		    	case MARK:
+//			   break;
 			case START:
 			case TOKEN:
 			case LEFT:
@@ -234,6 +232,7 @@ int definition(FILE* specfile){
 		   	printf("Definition: %%union\n");
 			break;
 		case LMARK:
+//		   	read_def_code_sect();
 		   /* '%{'  token, read all code looking for  token '%}'
 					if find EOF or potentiall MARK '%%' then error occurs */
 			next_token();
@@ -478,7 +477,17 @@ POTIENTIAL - need for checking for the ';' semicolon token here but
 			printf("expecting C_IDENT, we got %d\n", current_tok);
 			exit(EXIT_FAILURE);
 		}
-	    create_token_minus_1(cur_text,current_tok,NONTERMINAL,0);
+//	    create_token_minus_1(cur_text,current_tok,NONTERMINAL,0);
+	    slen = sizeof(char)*(strlen(cur_text));
+	    temp_tok_nam = malloc(slen);
+	    if(!temp_tok_nam){
+		   perror("couldn't create string here\n");
+		   exit(EXIT_FAILURE);
+	    }
+	    memset(temp_tok_nam,0,slen);
+	    strncpy(temp_tok_nam,cur_text,slen);
+	    temp_tok_nam[strlen(cur_text)-1] ='\0';
+	    process_n_set_tval(current_tok,NONTERMINAL,0);
 
 #ifdef debug_print
 	    printf("newtokval:%d\n",new_tok_val);
@@ -641,4 +650,8 @@ inline void check_for_empty_rule(rule_t* inrule){
 	   default:
 		  break;
     }
+}
+
+void read_def_code_sect(void){
+    
 }

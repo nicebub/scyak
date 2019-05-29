@@ -25,5 +25,6 @@ int grammar_rules(FILE* specfile);
 int rulebody(FILE* specfile,rule_t* rules);
 int optional_precision(FILE* specfile,rule_t* rules);
 void check_for_empty_rule(rule_t* inrule);
+void read_def_code_sect(void);
 
 #endif
