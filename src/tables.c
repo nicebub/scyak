@@ -160,6 +160,24 @@ void set_rul_prec(rule_t* rule, int8_t prec){
     rule->prec = prec;
 }
 
+void set_rul_code(rule_t* rule, char* code){
+    if(!rule) return;
+    rule->code = code;
+}
+char* get_rul_code(rule_t* rule){
+    if(!rule) return NULL;
+    return rule->code;
+}
+void set_rul_code_tok(rule_t* rule, size_t token){
+    if(!rule) return;
+    rule->code_tval = token;
+}
+size_t get_rul_code_tok(rule_t* rule){
+    if(!rule) return -1;
+    return rule->code_tval;
+}
+
+
 rule_t * create_grrul(tok_tab_t* name, size_t size){
 	rule_t* temp;
     size_t slen;
@@ -182,6 +200,8 @@ rule_t * create_grrul(tok_tab_t* name, size_t size){
 	temp->num_symbs = size;
     	temp->assoc = -1;
     	temp->prec = -1;
+    	temp->code = NULL;
+    	temp->code_tval = -1;
 	return temp;
 	
 }

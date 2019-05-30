@@ -22,41 +22,43 @@
 
 struct attribute_s
 {
-    tok_tab_t * name;
-    tok_tab_t val;
+    tok_tab_t * 	name;
+    tok_tab_t		val;
 };
 #define attr_t struct attribute_s
 struct tok_tbl_s
 {
-    	size_t tval;
-    	size_t termnum;
-	tok_tab_t * name;
-	tok_tab_t val;
-    	u_int8_t assoc;
-    	int8_t prec;
-	int8_t type;
+    	size_t 		tval;
+    	size_t 		termnum;
+	tok_tab_t * 	name;
+	tok_tab_t 	val;
+    	u_int8_t 		type;
+    	int8_t 		assoc;
+    	int8_t 		prec;
 };
 
 #define tok_tbl_t struct tok_tbl_s
 
 struct symbol_s
 {
-	size_t num_attribs;
-    	size_t tval;
-	attr_t * attribs; /* array of attribute structs */
-	tok_tab_t * name;
-	tok_tab_t val;
+	size_t 		num_attribs;
+    	size_t 		tval;
+	attr_t * 		attribs; /* array of attribute structs */
+	tok_tab_t * 	name;
+	tok_tab_t 	val;
 };
 
 #define symb_t struct symbol_s
 
 struct rule_s
 {
-	size_t num_symbs;
-	size_t used;
-    	symb_t ** symbols;
-    	int8_t prec;
-    	int8_t assoc;
+	size_t 		num_symbs;
+	size_t 		used;
+    	size_t 		code_tval;
+    	symb_t ** 	symbols;
+    	int8_t 		prec;
+    	int8_t 		assoc;
+    	char* 		code;
 };
 
 #define rule_t struct rule_s
@@ -64,14 +66,14 @@ struct rule_s
 
 struct table_s
 {
-	size_t num_ruls;
-	size_t used;
-	size_t num_toks;
-	size_t tokused;
-    	size_t num_terms;
-    	size_t num_nonterms;
-	rule_t ** rules;
-	tok_tbl_t* tokens;
+	size_t 		num_ruls;
+	size_t 		used;
+	size_t 		num_toks;
+	size_t 		tokused;
+    	size_t 		num_terms;
+    	size_t 		num_nonterms;
+	rule_t ** 	rules;
+	tok_tbl_t* 	tokens;
 };
 
 #define gr_tbl_t struct table_s
@@ -115,6 +117,10 @@ void print_symbol(symb_t * symbol);
 /* rule */
 rule_t * create_grrul(tok_tab_t* name, size_t size);
 void add_symb_to_rule(rule_t* rule,symb_t * symbol);
+void set_rul_code(rule_t* rule, char* code);
+char* get_rul_code(rule_t* rule);
+void set_rul_code_tok(rule_t*, size_t token);
+size_t get_rul_code_tok(rule_t* rule);
 void print_rule(rule_t* rule);
 symb_t* get_symb_by_pos(rule_t* rule, size_t pos);
 /* end rule methods */

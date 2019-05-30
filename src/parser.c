@@ -81,20 +81,6 @@ extern char* yytext;
 							rulebody(specfile,temp_rules); \
 							optional_precision(specfile,temp_rules)
 
-#define process_codeblock() \
-							printf("found { start of code\n"); \
-							while(current_tok != RCBRA && current_tok != MARK && \
-								current_tok != EOF) \
-										next_token(); \
-							if(current_tok == RCBRA){ \
-								printf("found } end of code\n"); \
-								create_code_token(); \
-							 	symb_t* temp_sym = create_symb(temp_tok_nam,new_tok_val);\
-								set_symb_tval(temp_sym,new_tok_val); \
-								add_symb_to_rule(temp_rules,temp_sym); \
-								print_gr_table(grammar_table); \
-							} \
-
 const static char rs[] = "RealStart";
 const static char rl[] = "rule";
 gr_tbl_t *grammar_table;
@@ -208,6 +194,7 @@ inline int optional_auxillary(FILE* specfile){
 	return RETVAL;
 }
 int definition(FILE* specfile){
+    char* defcode;
 	add_token_decls();
     	size_t slen;
 	int typ_tok,tag_tok;
@@ -232,38 +219,8 @@ int definition(FILE* specfile){
 		   	printf("Definition: %%union\n");
 			break;
 		case LMARK:
-//		   	read_def_code_sect();
-		   /* '%{'  token, read all code looking for  token '%}'
-					if find EOF or potentiall MARK '%%' then error occurs */
-			next_token();
-		   printf("start of definition code section %%{ %%}\n");
-		   	while(1){
-			  switch(current_tok){
-				 case RMARK:
-				 case MARK:
-				 case EOF:
-					goto w1end;
-					break;
-				 default:
-				    	next_token();
-				    	break;
-			  }
-			 }
-			 w1end:
-#ifdef debug_print
-			 switch(current_tok){
-			  	case EOF:
-				    printf("found EOF\n");
-				    break;
-			  	case MARK:
-				    printf("found MARK\n");
-				    break;
-			  	default:
-				    printf("end of code\n");
-				    break;
-			 }
-#endif
-			 break;
+		   defcode = read_def_code_sect(specfile);
+		   break;
 		default:
 		   /* we found a grammar definition, continue */
 			typ_tok = option_type(specfile);
@@ -512,6 +469,7 @@ POTIENTIAL - need for checking for the ';' semicolon token here but
 int rulebody(FILE* specfile, rule_t* temp_rules){
 	add_token_decls();
     	size_t slen;
+    char* rul_code;
 	while(1){
 	    /* input token != EOF, != MARK '%%', != PREC_TOKEN %prec, != ';' */
 		switch(current_tok){
@@ -539,13 +497,9 @@ int rulebody(FILE* specfile, rule_t* temp_rules){
 			   break;
 			case LCBRA:
 			   printf("found code in rulebody\n");
-			   process_codeblock()
+			   rul_code = process_codeblock(specfile,temp_rules);
+			   current_tok = RCBRA;
 			   /*  a ';' will cause error with next statements */
-			   else if(current_tok == MARK)
-			   /* attached to process_codeblock*/
-				printf("found MARK\n");
-			   else
-				printf("found EOF\n");
 				continue;
 				break;
 			   		/* '{' token then read and store all the next
@@ -558,15 +512,19 @@ int rulebody(FILE* specfile, rule_t* temp_rules){
 				exit(EXIT_FAILURE);
 				break; /* error, nothing else expected */
 		}
+//	    printf("outside switch above outside label\n");
 	outside:
+//	    printf("outside switch below outside label\n");
 		if((current_tok != MARK) || (current_tok != EOF))
 			next_token();
 	}
 	endrbody:
+  //  printf("outside while loop of rulebody\n");
 	return RETVAL;
 }
 int optional_precision(FILE* specfile,rule_t* temp_rules){
-	add_token_decls();
+//	add_token_decls();
+    char* rul_code;
     	int found_tok;
     	u_int8_t tprec,tassoc;
     tok_tbl_t* tb_ptr;
@@ -604,15 +562,12 @@ int optional_precision(FILE* specfile,rule_t* temp_rules){
 					   next_token();
 					   if(current_tok == LCBRA){
 						  printf("found code in optional precision\n");
-							process_codeblock()
-						  /*  a ';' will cause error with next statements */
-							/* if input token == '{' we found code to process
-							read code and output or store data */
-							else if(current_tok == MARK)
-							/* attached to process_codeblock*/
-								;
-							else
-								;
+						  rul_code = process_codeblock(specfile,temp_rules);
+						  set_rul_code(temp_rules,rul_code);
+						  set_rul_code_tok(temp_rules,grammar_table->tokused-1);
+						  printf("setting code tok to %s\n",
+							    get_tok_nam(get_tok_by_id(grammar_table->tokens,
+								    get_rul_code_tok(temp_rules))));
 					   }
 				    default:
 					   break;
@@ -652,6 +607,147 @@ inline void check_for_empty_rule(rule_t* inrule){
     }
 }
 
-void read_def_code_sect(void){
-    
+char* read_def_code_sect(FILE* specfile){
+    int c;
+    char* defcode;
+    char* code_head;
+    char* fresh_code;
+    size_t def_sz,def_used;
+    defcode = malloc(sizeof(char)*128);
+    memset(defcode,0,sizeof(char)*128);
+    def_sz=128;
+    def_used=0;
+    code_head=defcode;
+    c=fgetc(specfile);
+    while(1){
+	   switch(c){
+		  case EOF:
+			 printf("unexpected early termination of specification file\n");
+			 exit(EXIT_FAILURE);
+			 break;
+		  case '%':
+			 c=fgetc(specfile);
+			 if(c=='}'){
+//				printf("found RMARK\n");
+				*code_head = '\0';
+				goto outie;
+			 }
+			 else if(c=='%'){
+				printf("found %%%% MARKer, missing %%} RMARK?\n");
+				exit(EXIT_FAILURE);
+			 }
+			 ungetc(c,specfile);
+			 ungetc('%',specfile);
+		  default:
+			 *code_head = c;
+			 code_head++;
+			 def_used++;
+			 if(def_used==def_sz){
+//				printf("need more memory in definitions, realloc\n");
+				defcode = realloc(defcode,sizeof(char)*(2*def_sz));
+				if(!defcode){
+				    perror("realloc definition code");
+				    exit(EXIT_FAILURE);
+				}
+				code_head = &defcode[def_used-1];
+				def_sz*=2;
+			 }
+			 c=fgetc(specfile);
+			 break;
+	   }
+    }
+outie:
+    fresh_code = malloc(sizeof(char)*(strlen(defcode)+1));
+    memset(fresh_code,0,sizeof(char)*(strlen(defcode)+1));
+    strncpy(fresh_code,defcode,strlen(defcode));
+    free(defcode);
+    defcode = NULL;
+    return fresh_code;
+}
+
+
+
+char* process_codeblock(FILE* specfile,rule_t* temp_rules){
+    add_token_decls();
+//    add_rule_decls();
+    size_t def_sz,def_used;
+    char* defcode;
+    char* code_head;
+    char* fresh_code;
+    int c,r,in_sin_quotes,in_dbl_quotes;
+    defcode = malloc(sizeof(char)*128);
+    memset(defcode,0,sizeof(char)*128);
+    def_sz=128;
+    def_used=0;
+    in_sin_quotes=0;
+    in_dbl_quotes=0;
+    code_head=defcode;
+    c=fgetc(specfile);
+//    printf("found { start of code\n");
+    while(1){
+//	   printf("character working with %c\n",c);
+	   switch(c){
+		  case '%':
+			 r = fgetc(specfile);
+			 if(r == '%'){
+				printf("found %%%% MARKer during code section\n");
+				exit(EXIT_FAILURE);
+			 }
+			 ungetc(r,specfile);
+		  case '\\':
+			 char_to_code(&c,&code_head,&def_used,&def_sz,&defcode);
+			 c=fgetc(specfile);
+			 goto addchar;
+			 break;
+		  case '\'':
+			 in_sin_quotes = ~in_sin_quotes;
+			 goto addchar;
+			 break;
+		  case '\"':
+			 in_dbl_quotes = ~in_dbl_quotes;
+			 goto addchar;
+		  case '}':
+			 if(!in_sin_quotes&& !in_dbl_quotes){
+//				printf("found } end of code\n");
+				*code_head = '\0';
+				fresh_code = malloc(sizeof(char)*(strlen(defcode)+1));
+				memset(fresh_code,0,sizeof(char)*(strlen(defcode)+1));
+				strncpy(fresh_code,defcode,strlen(defcode));
+				free(defcode);
+			//	ungetc(c,specfile);
+				defcode = NULL;
+				create_code_token();
+				symb_t* temp_sym = create_symb(temp_tok_nam,new_tok_val);
+				set_symb_tval(temp_sym,new_tok_val);
+				add_symb_to_rule(temp_rules,temp_sym);
+				print_gr_table(grammar_table);
+				return fresh_code;
+			 }
+			 else
+				goto addchar;
+		  case EOF:
+			 printf("found EOF during code section\n");
+			 exit(EXIT_FAILURE);
+			 break;
+		  default:
+		  addchar:
+			 char_to_code(&c,&code_head,&def_used,&def_sz,&defcode);
+			 break;
+	   }
+	   c = fgetc(specfile);
+    }
+}
+void char_to_code(int *c,char** code_head,size_t* def_used,size_t* def_sz,char** defcode){
+    **code_head = *c;
+    (*code_head)+=1;
+    *(def_used)+=1;
+    if(*def_used== *def_sz){
+	   *defcode = realloc(*defcode,sizeof(char)*(2*(*def_sz)));
+	   if(!(*defcode)){
+		  perror("realloc definition code");
+		  exit(EXIT_FAILURE);
+	   }
+	   *code_head = defcode[(*def_used)-1];
+	   (*def_sz) *=2;
+    }
 }
