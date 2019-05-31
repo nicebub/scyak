@@ -1,6 +1,7 @@
 #ifndef LR0B_H
 #define LR0B_H
 #include "lr0.h"
+
 #define SHIFT 1
 #define REDUCE 2
 #define ACCEPT 4

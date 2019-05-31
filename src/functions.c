@@ -87,7 +87,7 @@ void finalize_rule_prec(rule_t* temp_rules, gr_tbl_t* grammar_table){
 		  prval = get_symb_val(prsym);
 		  prtval = get_symb_tval(prsym);
 		  prtok = get_tok_by_id(grammar_table->tokens,prtval);
-		  if(prval != CODE && get_tok_type(prtok) == TERMINAL){
+		  if(prval != CODE && prval != EMPTY && get_tok_type(prtok) == TERMINAL){
 			 printf("found last terminal of rule, not code..it is: %s\n",get_tok_nam(prtok));
 			 set_rul_prec(temp_rules,get_tok_prec(prtok));
 			 set_rul_assoc(temp_rules,get_tok_assoc(prtok));

@@ -45,6 +45,7 @@ struct symbol_s
     	size_t 		tval;
 	attr_t * 		attribs; /* array of attribute structs */
 	tok_tab_t * 	name;
+    	char* 		code;
 	tok_tab_t 	val;
 };
 
@@ -112,6 +113,8 @@ void set_symb_val(symb_t* symbol, tok_tab_t val);
 void set_symb_tval(symb_t* in_symb, size_t val);
 symb_t* copy_symb(symb_t* in_symb);
 void print_symbol(symb_t * symbol);
+void set_symb_code(symb_t* symbol, char* code);
+char* get_symb_code(symb_t* symbol);
 /* end symbol methods */
 
 /* rule */

@@ -1,18 +1,46 @@
 #include <ctype.h>
 #include <stdio.h>
-#include "run_parser.h"
-#include "lr0b.h"
 #include <string.h>
+#include <stdlib.h>
+#include "lr0b.h"
 #include "tokens.h"
+/*
+ struct action_s
+ {
+ u_int8_t state;
+ u_int8_t action;
+ u_int8_t rule;
+ u_int8_t numtoks;
+ };
+ 
+ struct parser_tables_s
+ {
+ size_t num_states;
+ size_t num_terms;
+ size_t num_nonterms;
+ struct action_s ** ACTION;
+ int ** GTTBL;
+ };
+
+ */
+#define NUM_STATES #0#
+#define NUM_NONTERMS #0#
+#define NUM_TERMS #0#
+
+void run_parser(void);
+int mlexer(FILE* thefile);
+
 char lex_text[128];
-void run_parser(struct parser_tables_s* ptable){
+void run_parser(void){
     u_int8_t stack[100];
     memset(stack,0,sizeof(u_int8_t)*100);
-    u_int8_t* top = &stack[0];
+    register u_int8_t* top = &stack[0];
     char* file_to_parse;
     FILE* thefile;
     int tokn;
     int ntindex;
+    const static int GTTBL[NUM_STATES][NUM_NONTERMS] = #0#;
+    const static struct action_s ACTION[NUM_STATES][NUM_TERMS] = #0#;
     file_to_parse = malloc(sizeof(char)*128);
     memset(file_to_parse,0,sizeof(char)*128);
     
@@ -27,20 +55,20 @@ void run_parser(struct parser_tables_s* ptable){
     printf("token %d\n",tokn);
     while(1){
 	   printf("currently in state %d\n",*top);
-	   switch(ptable->ACTION[*top][tokn].action){
+	   switch(ACTION[*top][tokn].action){
 		  case SHIFT:
 			    printf("shifting\n");
 			    top++;
-			    *top = ptable->ACTION[*(top-1)][tokn].state;
+			    *top = ACTION[*(top-1)][tokn].state;
 			    tokn = mlexer(thefile);
 			    break;
 		  case REDUCE:
 			    printf("reducing\n");
-			    ntindex = ptable->ACTION[*(top)][tokn].rule;
-			    printf("reduced by some production %d and head production %d num tokens %d\n",ptable->ACTION[*(top)][tokn].state,
-					 ptable->ACTION[*(top)][tokn].rule,ptable->ACTION[*(top)][tokn].numtoks);
-			    top = top - (ptable->ACTION[*top][tokn].numtoks-1);
-			    *top = ptable->GTTBL[*(top-1)][ntindex];
+			    ntindex = ACTION[*(top)][tokn].rule;
+			    printf("reduced by some production %d and head production %d num tokens %d\n",ACTION[*(top)][tokn].state,
+					 ACTION[*(top)][tokn].rule,ACTION[*(top)][tokn].numtoks);
+			    top = top - (ACTION[*top][tokn].numtoks-1);
+			    *top = GTTBL[*(top-1)][ntindex];
 			    break;
 		  case ACCEPT:
 			    printf("accepting\n");

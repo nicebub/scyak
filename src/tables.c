@@ -85,6 +85,7 @@ symb_t * create_symb(tok_tab_t* name,tok_tab_t val){
     	temp->tval = -1;
 	temp->num_attribs = 0;
 	temp->attribs = NULL;
+    	temp->code = NULL;
 	return temp;
 }
 
@@ -109,6 +110,8 @@ symb_t* copy_symb(symb_t* in_symb){
 	out_symb->val = in_symb->val;
 	out_symb->num_attribs = in_symb->num_attribs;
     	out_symb->tval = in_symb->tval;
+    	out_symb->code = in_symb->code;
+    	out_symb->attribs = in_symb->attribs;
 	return out_symb;
 }
 inline attr_t* get_symb_attrib(symb_t* symbol){
@@ -143,6 +146,15 @@ inline void set_symb_val(symb_t* symbol, tok_tab_t val){
     if(!symbol) return;
     symbol->val = val;
 }
+void set_symb_code(symb_t* symbol, char* code){
+    if(!symbol) return;
+    symbol->code = code;
+}
+char* get_symb_code(symb_t* symbol){
+    if(!symbol) return NULL;
+    return symbol->code;
+}
+
 int8_t get_rul_assoc(rule_t* rule){
     if(!rule) return -1;
     return rule->assoc;
