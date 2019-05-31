@@ -67,14 +67,17 @@ struct rule_s
 
 struct table_s
 {
-	size_t 		num_ruls;
-	size_t 		used;
-	size_t 		num_toks;
-	size_t 		tokused;
-    	size_t 		num_terms;
-    	size_t 		num_nonterms;
-	rule_t ** 	rules;
-	tok_tbl_t* 	tokens;
+	size_t 				num_ruls;
+	size_t 				used;
+	size_t 				num_toks;
+	size_t 				tokused;
+    	size_t 				num_terms;
+    	size_t 				num_nonterms;
+	rule_t ** 			rules;
+	tok_tbl_t* 			tokens;
+    	char*				def_code;
+    	char*				aux_code;
+    	struct parser_tables_s* 	ptables;
 };
 
 #define gr_tbl_t struct table_s
@@ -126,6 +129,10 @@ void set_rul_code_tok(rule_t*, size_t token);
 size_t get_rul_code_tok(rule_t* rule);
 void print_rule(rule_t* rule);
 symb_t* get_symb_by_pos(rule_t* rule, size_t pos);
+int8_t get_rul_assoc(rule_t* rule);
+int8_t get_rul_prec(rule_t* rule);
+void set_rul_assoc(rule_t* rule, int8_t ass);
+void set_rul_prec(rule_t* rule, int8_t prec);
 /* end rule methods */
 /* table */
 gr_tbl_t * create_grtbl(tok_tab_t* name,size_t size);
@@ -133,10 +140,10 @@ void add_rule_to_table(gr_tbl_t * table, rule_t* rule);
 void calculate_num_terms(gr_tbl_t* grammar_table);
 void print_gr_table(gr_tbl_t * table);
 rule_t* get_rul_by_pos(gr_tbl_t* table, size_t pos);
-int8_t get_rul_assoc(rule_t* rule);
-int8_t get_rul_prec(rule_t* rule);
-void set_rul_assoc(rule_t* rule, int8_t ass);
-void set_rul_prec(rule_t* rule, int8_t prec);
+void set_tbl_def_code(gr_tbl_t* table, char* defs);
+void set_tbl_aux_code(gr_tbl_t* table, char* aux);
+char* get_tbl_aux_code(gr_tbl_t* table);
+char* get_tbl_def_code(gr_tbl_t* table);
 /* end table methods */
 
 

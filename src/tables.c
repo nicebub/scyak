@@ -229,7 +229,7 @@ void add_symb_to_rule(rule_t* rule,symb_t * symbol){
     size_t slen,rlen;
 	if(rule && symbol){
 		if(rule->used == rule->num_symbs){
-			printf("need more memory for symbols, extending if possible\n");
+//			printf("need more memory for symbols, extending if possible\n");
 		    rlen = rule->used+RUL_INC_SIZE;
 		    slen = sizeof(symb_t*)*(rlen);
 		    rule->symbols = realloc(rule->symbols,slen);
@@ -299,7 +299,7 @@ void add_rule_to_table(gr_tbl_t * table, rule_t* rule){
     size_t slen,rlen;
 	if(rule == NULL){ printf("rule is NULL\n");return; }
 	if(table->used == table->num_ruls){
-		printf("need more memory for rules, extending if possible\n");
+	//	printf("need more memory for rules, extending if possible\n");
 	    rlen = table->used+RUL_INC_SIZE;
 	    slen = sizeof(rule_t*)*(rlen);
 	    table->rules = realloc(table->rules,slen);
@@ -337,6 +337,9 @@ gr_tbl_t * create_grtbl(tok_tab_t* name,size_t size){
     	table->num_terms = 0;
     	table->num_nonterms = 0;
 	table->tokens = NULL;
+    	table->ptables = NULL;
+    	table->def_code = NULL;
+    	table->aux_code = NULL;
 	return table;
 }
 rule_t* get_rul_by_pos(gr_tbl_t* table, size_t pos){
@@ -351,14 +354,14 @@ void calculate_num_terms(gr_tbl_t * grammar_table){
     for(int i=2;i<grammar_table->tokused;i++){
 	   if(grammar_table->tokens[i].type == TERMINAL){
 		  grammar_table->tokens[i].termnum = grammar_table->num_terms++;
-		  printf("set terminal %s to term num %zu\n",grammar_table->tokens[i].name,grammar_table->tokens[i].termnum);
+//		  printf("set terminal %s to term num %zu\n",grammar_table->tokens[i].name,grammar_table->tokens[i].termnum);
 	   }
 	   else{
 		  grammar_table->tokens[i].termnum = grammar_table->num_nonterms++;
-		  printf("set nonterminal %s to nonterm num %zu\n",grammar_table->tokens[i].name,grammar_table->tokens[i].termnum);
+//		  printf("set nonterminal %s to nonterm num %zu\n",grammar_table->tokens[i].name,grammar_table->tokens[i].termnum);
 	   }
     }
-    printf("IN this table, found %zu terminals and %zu nonterminals\n",grammar_table->num_terms,grammar_table->num_nonterms);
+  //  printf("IN this table, found %zu terminals and %zu nonterminals\n",grammar_table->num_terms,grammar_table->num_nonterms);
 }
 
 void print_gr_table(gr_tbl_t * table){
@@ -369,6 +372,22 @@ void print_gr_table(gr_tbl_t * table){
 	}
 }
 
+void set_tbl_def_code(gr_tbl_t* table, char* defs){
+    if(!table) return;
+    table->def_code = defs;
+}
+void set_tbl_aux_code(gr_tbl_t* table, char* aux){
+    if(!table) return;
+    table->aux_code = aux;
+}
+char* get_tbl_aux_code(gr_tbl_t* table){
+    if(!table) return NULL;
+    return table->def_code;
+}
+char* get_tbl_def_code(gr_tbl_t* table){
+    if(!table) return NULL;
+    return table->def_code;
+}
 
 #ifdef DEBUGA
 int main(int argc, char const ** argv){

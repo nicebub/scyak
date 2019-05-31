@@ -179,7 +179,7 @@ void add_set_to_array(struct lr0_array_set* array, struct lr0_set* lrset){
 		return;
 	}
 	if(array->used == array->num_sets){
-	    printf("need more memory for array using realloc\n");
+//	    printf("need more memory for array using realloc\n");
 	    rlen = array->used+ARR_INC_SIZE;
 	    slen = sizeof(struct lr0_set*)*rlen;
 	    array->array = realloc(array->array,slen);

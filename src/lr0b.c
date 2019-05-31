@@ -428,45 +428,45 @@ void fill_action_table(struct parser_tables_s* ptable,gr_tbl_t* grammar_table,st
     int8_t nprec;
     rule_t* prec_rul;
     int rule,pos,in_ra;
-    printf("working with these tokens\n");
+/*    printf("working with these tokens\n");
     print_tok_array(grammar_table->tokens,grammar_table->tokused);
     printf("here are the rules again");
-    print_gr_table(grammar_table);
+    print_gr_table(grammar_table);*/
     follows = get_follow_set(canon,grammar_table);
-    printf("working with this follow set\n");
+/*    printf("working with this follow set\n");
     print_lr0_array(follows);
     printf("working with this canon\n");
     print_lr0_array(canon);
-    printf("filling action table\n");
+    printf("filling action table\n");*/
     for(int i=0;i<canon->used;i++){
-	   printf("set %d out of %zu\n",i,canon->used);
+//	   printf("set %d out of %zu\n",i,canon->used);
 	   fset = get_set_by_pos(canon,i);
 	   for(int j=0;j<fset->used;j++){
-		  printf("symbol %d out of %lu\n",j,fset->used);
+//		  printf("symbol %d out of %lu\n",j,fset->used);
 		  litem = get_item_by_pos(fset,j);
 		  rule = get_item_rul(litem);
 		  pos = get_item_pos(litem);
 		  tem_rul = get_rul_by_pos(grammar_table,rule);
 		  if(rule == 0 && pos ==2){
-			 printf("found End of Start rule\n");
+//			 printf("found End of Start rule\n");
 			 ptable->ACTION[i][ptable->num_terms-1].action = ACCEPT;
 		  }
 		  tsymt = get_item_symb(litem);
 		  if(get_symb_val(tsymt) != EMPTY){
-			 printf("symbol is not empty\n");
+//			 printf("symbol is not empty\n");
 			 tok_val = get_symb_tval(tsymt);
 			 tem_token = get_tok_by_id(grammar_table->tokens,tok_val);
 			 tok_type = get_tok_type(tem_token);
 //			 tsymt =
 //			 tsymt = get_symb_by_pos(tem_rul,pos);
 			 if(tok_type == TERMINAL){
-			 	printf("found terminal %s in state set\n",get_symb_nam(tsymt));
+//			 	printf("found terminal %s in state set\n",get_symb_nam(tsymt));
 				gt_set = GOTO(fset,tok_val,universe_set, grammar_table);
 				in_ra = set_is_in_array(gt_set,canon);
 				ttnum = get_tok_termnum(tem_token);
 				if(in_ra != -1){
 				    if(ptable->ACTION[i][ttnum].action == AERROR){
-						  	printf("setting ACTION table state %d, action %d\n",in_ra,SHIFT);
+//						  	printf("setting ACTION table state %d, action %d\n",in_ra,SHIFT);
 						  	ptable->ACTION[i][ttnum].state = in_ra;
 						  	ptable->ACTION[i][ttnum].action = SHIFT;
 					}
@@ -538,12 +538,12 @@ void fill_action_table(struct parser_tables_s* ptable,gr_tbl_t* grammar_table,st
 			 hed_o_rl_symb = get_symb_by_pos(tem_rul,0);
 			 
 			 if(pos == tem_rul->used){
-				printf("found the end of rule empty string\n");
+//				printf("found the end of rule empty string\n");
 				hd_o_rl_tvl = get_symb_tval(hed_o_rl_symb);
 				fset = get_set_by_pos(follows,hd_o_rl_tvl);
 				if(hd_o_rl_tvl !=0){
 				    for(int b=0;b<fset->used;b++){
-					   	printf("going through follow array of %s, symbol %d\n",get_symb_nam(hed_o_rl_symb),b);
+//					   	printf("going through follow array of %s, symbol %d\n",get_symb_nam(hed_o_rl_symb),b);
 					   qitem = get_item_by_pos(fset,b);
 					   tok_tbl_t* lastok;
 					   lastok = get_item_tok(qitem);
@@ -552,11 +552,11 @@ void fill_action_table(struct parser_tables_s* ptable,gr_tbl_t* grammar_table,st
 						    using_index = thetnum;
 				    		}
 				    		else{
-						    printf("found DOLLAR SIGN\n");
+//						    printf("found DOLLAR SIGN\n");
 						    using_index = ptable->num_terms-1;
 				    		}
 					   if(ptable->ACTION[i][using_index].action == AERROR){
-						  printf("setting ACTION table to REDUCE %d by rule %d to state %zu num symbols to pop %lu\n",REDUCE,rule,hd_o_rl_tvl,tem_rul->used-1);
+//						  printf("setting ACTION table to REDUCE %d by rule %d to state %zu num symbols to pop %lu\n",REDUCE,rule,hd_o_rl_tvl,tem_rul->used-1);
 						  ptable->ACTION[i][using_index].action = REDUCE;
 						  ptable->ACTION[i][using_index].state = rule;
 						  ptable->ACTION[i][using_index].rule = get_tok_termnum(get_tok_by_id(grammar_table->tokens,hd_o_rl_tvl));
@@ -638,23 +638,23 @@ void fill_action_table(struct parser_tables_s* ptable,gr_tbl_t* grammar_table,st
     }
     for(int m=0;m<grammar_table->tokused-1;m++){
 	   rttok = get_tok_by_id(grammar_table->tokens,m);
-	   printf("GOTO table construction with symbol %d\n",m);
+//	   printf("GOTO table construction with symbol %d\n",m);
 	   if(get_tok_type(rttok) == NONTERMINAL){
-		  printf("symbol is a nonterminal, continuing\n");
+//		  printf("symbol is a nonterminal, continuing\n");
 		  for(int h=0;h<canon->used;h++){
 			 hset = get_set_by_pos(canon,h);
-			 printf("going through states, on %d\n",h);
+//			 printf("going through states, on %d\n",h);
 			 gt_set = GOTO(hset,get_tok_tval(rttok),universe_set, grammar_table);
 			 in_ra = set_is_in_array(gt_set,canon);
 			 if(in_ra != -1){
 				termval = get_tok_termnum(rttok);
-				printf("found GOTO before, which is good, so setting in GOTO table %d %zu to %d\n",h,termval,in_ra);
+//				printf("found GOTO before, which is good, so setting in GOTO table %d %zu to %d\n",h,termval,in_ra);
 				ptable->GTTBL[h][termval] = in_ra;
 			 }
 		  }
 	   }
     }
-    printf("done with action and goto set, printing them now\n");
+//    printf("done with action and goto set, printing them now\n");
     print_action_n_goto_tbls(ptable);
 }
 void print_action_n_goto_tbls(struct parser_tables_s* ptable){

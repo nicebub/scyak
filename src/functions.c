@@ -12,7 +12,7 @@ int process_token(char val, char* nam,u_int8_t type,int pos,gr_tbl_t *grammar_ta
     	temp_tok = tok_exists(nam,grammar_table);
 	if(temp_tok == -1){
 	    if(grammar_table->tokused == grammar_table->num_toks){
-		   printf("need more memory for tokens, extending if possible\n");
+//		   printf("need more memory for tokens, extending if possible\n");
 		   grammar_table->tokens = realloc(grammar_table->tokens,sizeof(tok_tbl_t)*newsz);
 		   if(!grammar_table->tokens){
 			  perror("Realloc in process token:");
@@ -88,13 +88,13 @@ void finalize_rule_prec(rule_t* temp_rules, gr_tbl_t* grammar_table){
 		  prtval = get_symb_tval(prsym);
 		  prtok = get_tok_by_id(grammar_table->tokens,prtval);
 		  if(prval != CODE && prval != EMPTY && get_tok_type(prtok) == TERMINAL){
-			 printf("found last terminal of rule, not code..it is: %s\n",get_tok_nam(prtok));
+//			 printf("found last terminal of rule, not code..it is: %s\n",get_tok_nam(prtok));
 			 set_rul_prec(temp_rules,get_tok_prec(prtok));
 			 set_rul_assoc(temp_rules,get_tok_assoc(prtok));
 			 return;
 		  }
-		  printf("no terminal yet, keep looking...\n");
+//		  printf("no terminal yet, keep looking...\n");
 	   }
-	   printf("didn't find any terminals in this rule\n");
+//	   printf("didn't find any terminals in this rule\n");
     }
 }

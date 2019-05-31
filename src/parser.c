@@ -41,8 +41,10 @@ extern char* yytext;
 	temp_tok_nam[strlen(name)-1] ='\0'; \
 	process_n_set_tval(tokid,type,pos)
 
+#define add_ctok_decls() \
+			char* codenum
+
 #define create_code_token() \
-			char* codenum; \
 			codenum = malloc(sizeof(char)*(3)); \
 			sprintf(codenum,"%zu",num_code_sects); \
 			num_code_sects++; \
@@ -89,7 +91,7 @@ gr_tbl_t *grammar_table;
 size_t num_code_sects;
 extern  u_int8_t prec_count; /*  precedence counter defined in functions.c */
 /* Function Definitions */
-struct parser_tables_s* read_and_parse_specfile(FILE* specfile){
+gr_tbl_t* read_and_parse_specfile(FILE* specfile){
 	struct lr0_array_set* canon;
     	struct parser_tables_s* ptables;
   //  	size_t slen;
@@ -148,7 +150,8 @@ struct parser_tables_s* read_and_parse_specfile(FILE* specfile){
 	optional_auxillary(specfile);
 
     	printf("done reading specfile\n");
-    	return ptables;
+    grammar_table->ptables = ptables;
+    	return grammar_table;
 }
 
 inline int optional_definitions(FILE* specfile){
@@ -173,12 +176,16 @@ inline int optional_definitions(FILE* specfile){
 	return RETVAL;
 }
 inline int optional_auxillary(FILE* specfile){
+ //   char* aux;
+    printf("auxillary workingn with %d %s\n",current_tok,cur_text);
 	switch(current_tok){
 		   /* what is the input token value, switch on this */
 		case EOF:
 		   /* EOF  this is ok, we are done with the rules with no extra auxillary */
 				break;
 		case MARK:
+		   printf("found %%%% marker, reading aux section if there\n");
+		 set_tbl_aux_code(grammar_table,read_aux_code_sect(specfile));
 		   /* MARK '%%' now read everything else as code to output
 								to parser file to be included */
 		   		break;
@@ -190,7 +197,7 @@ inline int optional_auxillary(FILE* specfile){
 	return RETVAL;
 }
 int definition(FILE* specfile){
-    char* defcode;
+//    char* defcode;
 	add_token_decls();
 //    	size_t slen;
 	int typ_tok,tag_tok;
@@ -203,7 +210,7 @@ int definition(FILE* specfile){
 				printf("expecting Identifer after %%start\n");
 				exit(EXIT_FAILURE);
 			}
-			printf("Definition: %%start %s\n",cur_text);
+//			printf("Definition: %%start %s\n",cur_text);
 		   	create_token(cur_text,current_tok,NONTERMINAL,0);
 
 			#ifdef debug_print
@@ -212,10 +219,10 @@ int definition(FILE* specfile){
 			break;
 		case UNION:
 		   /* %union */
-		   	printf("Definition: %%union\n");
+//		   	printf("Definition: %%union\n");
 			break;
 		case LMARK:
-		   defcode = read_def_code_sect(specfile);
+		   set_tbl_def_code(grammar_table,read_def_code_sect(specfile));
 		   break;
 		default:
 		   /* we found a grammar definition, continue */
@@ -232,19 +239,19 @@ int option_type(FILE* specfile){
 	switch(current_tok){
 		   /* input token value will be here */
 		case TOKEN: /* %token TOKEN */ 
-			printf("Definition: %%token\n");
+//			printf("Definition: %%token\n");
 			break;
 		case LEFT: /* %left LEFT token */ 
-			printf("Definition: %%left\n");
+//			printf("Definition: %%left\n");
 			break;
 		case RIGHT: /* %right RIGHT token */
-			printf("Definition: %%right\n");
+//			printf("Definition: %%right\n");
 			 break;
 		case NONASSOC: /* %nonassoc token */ 
-			printf("Definition: %%nonassoc\n");
+//			printf("Definition: %%nonassoc\n");
 			break;
 		case TYPE: /* %type token */ 
-			printf("Definition: %%type\n");
+//			printf("Definition: %%type\n");
 			break;
 		default:
 		   	printf("not expecting this token %d\n", current_tok);
@@ -312,7 +319,7 @@ combo:		identcombo(typ_tok,specfile);
 					 			continue loop */
 				/* IDENTIFIER token, go back through loop */
 			case MARK:
-				printf("found a MARK, finish loop\n");
+//				printf("found a MARK, finish loop\n");
 				continue;
 			   break;
 			   /* MARK '%%' token, finish loop */
@@ -391,7 +398,7 @@ int identcombo(int typ_tok,FILE* specfile){
 			else if(current_tok == COMMA || current_tok == IDENT){
 			    /* input token == ',' comma or == IDENTIFIER */
 
-				printf("found either a comma or another ident\n");
+//				printf("found either a comma or another ident\n");
 			/* process as just IDENTIFIER and not IDENTIFER NUMBER */
 			}
 			else if(current_tok == MARK){ /* input token == MARK '%%' */
@@ -470,6 +477,7 @@ POTIENTIAL - need for checking for the ';' semicolon token here but
 }
 int rulebody(FILE* specfile, rule_t* temp_rules){
 	add_token_decls();
+    	add_ctok_decls();
   //  	size_t slen;
     char* rul_code;
 	while(1){
@@ -498,17 +506,17 @@ int rulebody(FILE* specfile, rule_t* temp_rules){
 //			   print_gr_table(grammar_table);
 			   break;
 			case LCBRA:
-			   printf("found code in rulebody\n");
+//			   printf("found code in rulebody\n");
 			   create_code_token();
 			   rul_code = process_codeblock(specfile,temp_rules);
-			   printf("token value before new val %d\n",current_tok);
+//			   printf("token value before new val %d\n",current_tok);
 			   next_token();
 			   if(current_tok!=RCBRA){
 				  printf("expecting a  { to end the code section\n");
 				  exit(EXIT_FAILURE);
 			   }
 			   next_token();
-			   printf("after code section, found token %d\n",current_tok);
+//			   printf("after code section, found token %d\n",current_tok);
 			   switch(current_tok){
 				  case ORSYMB:
 				  case C_IDENT:
@@ -517,15 +525,15 @@ int rulebody(FILE* specfile, rule_t* temp_rules){
 				  case EOF:
 					 set_rul_code(temp_rules,rul_code);
 					 set_rul_code_tok(temp_rules,grammar_table->tokused-1);
-					 printf("setting code for rule to %s\n",
-						   get_tok_nam(get_tok_by_id(grammar_table->tokens,
-											    get_rul_code_tok(temp_rules))));
+//					 printf("setting code for rule to %s\n",
+//						   get_tok_nam(get_tok_by_id(grammar_table->tokens,
+//											    get_rul_code_tok(temp_rules))));
 					 break;
 				  default:
 					 gen_symb_to_rule;
 					 set_symb_code(temp_sym ,rul_code);
-					 printf("setting code for symbol to %s\n",
-						   get_tok_nam(get_tok_by_id(grammar_table->tokens,get_symb_tval(temp_sym))));
+//					 printf("setting code for symbol to %s\n",
+//						   get_tok_nam(get_tok_by_id(grammar_table->tokens,get_symb_tval(temp_sym))));
 					 break;
 			   }
 //			   current_tok = RCBRA;
@@ -554,6 +562,7 @@ int rulebody(FILE* specfile, rule_t* temp_rules){
 }
 int optional_precedence(FILE* specfile,rule_t* temp_rules){
 	add_token_decls();
+    	add_ctok_decls();
     char* rul_code;
     	int found_tok;
     	u_int8_t tprec,tassoc;
@@ -577,7 +586,7 @@ int optional_precedence(FILE* specfile,rule_t* temp_rules){
 				switch(current_tok){
 					case SEMICOLON:
 					   /* ';' semicolon */
-					   printf("found semicolon\n");
+//					   printf("found semicolon\n");
 					   break;
 					case IDENT:
 					   found_tok = tok_exists(cur_text,grammar_table);
@@ -591,14 +600,14 @@ int optional_precedence(FILE* specfile,rule_t* temp_rules){
 					/* read IDENTIFER token or error */
 					   next_token();
 					   if(current_tok == LCBRA){
-						  printf("found code in optional precision\n");
+//						  printf("found code in optional precision\n");
 						  create_code_token();
 						  rul_code = process_codeblock(specfile,temp_rules);
 						  set_rul_code(temp_rules,rul_code);
 						  set_rul_code_tok(temp_rules,grammar_table->tokused-1);
-						  printf("setting code tok to %s\n",
-							    get_tok_nam(get_tok_by_id(grammar_table->tokens,
-								    get_rul_code_tok(temp_rules))));
+//						  printf("setting code tok to %s\n",
+//							    get_tok_nam(get_tok_by_id(grammar_table->tokens,
+//								    get_rul_code_tok(temp_rules))));
 					   }
 				    default:
 					   break;
@@ -606,7 +615,7 @@ int optional_precedence(FILE* specfile,rule_t* temp_rules){
 						break;
 			case SEMICOLON:
 			   /* ';' semicolon */
-			   	printf("found semicolon\n");
+//			   	printf("found semicolon\n");
 				break;
 			default: 
 				break; /* error? maybe, need to see later */
@@ -625,7 +634,7 @@ inline void check_for_empty_rule(rule_t* inrule){
 	   case ORSYMB:
 	   case LCBRA:
 	   case SEMICOLON:
-		  printf("found an empty rule!! yay\n");
+//		  printf("found an empty rule!! yay\n");
 		  create_token("{e}",EMPTY,TERMINAL,1);
 
 #ifdef debug_print
@@ -717,7 +726,7 @@ char* process_codeblock(FILE* specfile,rule_t* temp_rules){
     c=fgetc(specfile);
 //    printf("found { start of code\n");
     while(1){
-	   printf("character working with %c\n",c);
+//	   printf("character working with %c\n",c);
 	   switch(c){
 		  case '%':
 			 r = fgetc(specfile);
@@ -748,8 +757,8 @@ char* process_codeblock(FILE* specfile,rule_t* temp_rules){
 				free(defcode);
 				ungetc(c,specfile);
 				defcode = NULL;
-				printf("code found as block: \n");
-				printf("%s\n",fresh_code);
+//				printf("code found as block: \n");
+//				printf("%s\n",fresh_code);
 				return fresh_code;
 			 }
 			 else
@@ -791,13 +800,13 @@ void change_tbl_for_code_sects(FILE* specfile,gr_tbl_t* grammar_table){
     e_tok = get_tok_by_id(grammar_table->tokens,tok_exists("{e}",grammar_table));
     for(int q=0;q<grammar_table->used;q++){
 	   rule = get_rul_by_pos(grammar_table,q);
-	   printf("this rule %d\n",q);
+//	   printf("this rule %d\n",q);
 	   for(int w=1;w<rule->used;w++){
 		  symbol = get_symb_by_pos(rule,w);
 		  token = get_tok_by_id(grammar_table->tokens,get_symb_tval(symbol));
-		  printf("working with this symbol %s\n",get_symb_nam(symbol));
+//		  printf("working with this symbol %s\n",get_symb_nam(symbol));
 		  if(get_tok_val(token) == CODE){
-			 printf("found code to make rule of\n");
+//			 printf("found code to make rule of\n");
 //			 new_tok_val = get_symb_tval(symbol);
 //			 temp_tok_nam = get_symb_nam(symbol);
 			 create_token(get_tok_nam(token),get_tok_val(token),TERMINAL,0);
@@ -809,8 +818,68 @@ void change_tbl_for_code_sects(FILE* specfile,gr_tbl_t* grammar_table){
 			 set_rul_code_tok(temp_rules,get_symb_tval(symbol));
 //			 print_gr_table(grammar_table);
 		  }
-		  else
-			 printf("not code to make rule of\n");
+//		  else
+//			 printf("not code to make rule of\n");
 	   }
     }
+}
+
+char* read_aux_code_sect(FILE* specfile){
+    char* defcode;
+  //  char* temp_code;
+    char* fresh_code;
+    size_t def_sz,def_used;
+    size_t file_pos;
+    size_t file_count;
+    def_sz = 128;
+    def_used = 0;
+
+    file_pos = ftell(specfile);
+    fseek(specfile,0,SEEK_END);
+    file_count = ftell(specfile) - file_pos;
+//    printf("file_pos %d file_count %d specfile ftell %d\n",file_pos,file_count,ftell(specfile));
+    fseek(specfile,-file_count,SEEK_END);
+    defcode = malloc(sizeof(char)*(file_count+1));
+//    t_char = malloc(sizeof(char)*101);
+//    memset(aux,0,sizeof(*aux));
+  //  memset(t_char,0,101);
+   // fgets(t_char,0,specfile);
+
+
+//    defcode = malloc(sizeof(char)*256);
+    memset(defcode,0,sizeof(char)*(file_count+1));
+//    temp_code = malloc(sizeof(char)*file_count);
+ //   memset(temp_code,0,file_count);
+    fread(defcode,sizeof(char),file_count,specfile);
+    printf("found defcode\n%s\n",defcode);
+//    fgets(temp_code,(int)file_count,specfile);
+//    strcat(defcode,temp_code);
+ //   def_used += file_count-1;
+/*    printf("found, so far:\n%s\n",temp_code);
+    while(*temp_code != EOF){
+	   printf("reading aux\n");
+	   if(def_used==def_sz){
+		  printf("need to realloc for aux code\n");
+		  defcode = realloc(defcode,sizeof(char)*(2*def_sz));
+		  if(!defcode){
+			 perror("realloc definition code");
+			 exit(EXIT_FAILURE);
+		  }
+		  def_sz*=2;
+	   }
+	   memset(temp_code,0,file_count);
+	   fgets(temp_code,(int)(def_sz-def_used),specfile);
+	   printf("temp_code again\n%s\n",temp_code);
+	   strcat(defcode,temp_code);
+	   def_used += def_sz-def_used-1;
+    }
+    printf("while loop done\n");*/
+    fresh_code = malloc(sizeof(char)*(strlen(defcode)+1));
+    memset(fresh_code,0,sizeof(char)*(strlen(defcode)+1));
+    strncpy(fresh_code,defcode,strlen(defcode));
+    free(defcode);
+    defcode = NULL;
+//    free(temp_code);
+  //  temp_code=NULL;
+    return fresh_code;
 }

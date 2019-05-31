@@ -17,7 +17,7 @@ This is the main file of the parser generator. This wrapper will call
 void version(void);
 void usage(void);
 void cleanup(FILE*);
-void create_parser_file(struct parser_tables_s* ptables);
+void create_parser_file(gr_tbl_t* grammar_table);
 
 int main(int argc, char ** argv){
 	char option;
@@ -54,9 +54,9 @@ int main(int argc, char ** argv){
 	#ifdef FLEX
 	yyin = spec_file;
 	#endif
-    struct parser_tables_s* ptables;
-    	ptables = read_and_parse_specfile(spec_file);
-    create_parser_file(ptables);
+     gr_tbl_t* grammar_table;
+    	grammar_table = read_and_parse_specfile(spec_file);
+    	create_parser_file(grammar_table);
 //    	printf("done running parser\n");
 	/*
 		construct table from spec file
@@ -94,13 +94,17 @@ void process_outfile(FILE* outfile,char* code);
 char* put_out_until_token(FILE* outfile,char* new_code);
 void push_goto_tbl(struct parser_tables_s* ptable,FILE* outfile);
 void push_action_tbl(struct parser_tables_s* ptable,FILE* outfile);
+void push_code_sections(gr_tbl_t* grammar_table,FILE* outfile);
+void push_aux(gr_tbl_t* grammar_table,FILE* outfile);
 
-void create_parser_file(struct parser_tables_s* ptables){
+void create_parser_file(gr_tbl_t* grammar_table){
+    struct parser_tables_s* ptables;
     FILE* parse_code;
     FILE* outfile;
     char* new_code;
     char* temp_code;
     size_t fl_sz;
+    ptables = grammar_table->ptables;
     if(!ptables){
 	   printf("Unkown error: parse tables weren't created\n");
 	   exit(EXIT_FAILURE);
@@ -125,9 +129,9 @@ void create_parser_file(struct parser_tables_s* ptables){
 	   fgets(temp_code,200,parse_code);
 //	   printf("working with this temp_code %s\n",temp_code);
     }
-    printf("----------code file found------------------\n");
-    printf("%s",new_code);
-    printf("----------code file found------------------\n");
+//    printf("----------code file found------------------\n");
+  //  printf("%s",new_code);
+    //printf("----------code file found------------------\n");
     free(temp_code);
     temp_code = NULL;
     outfile = fopen("scy.tab.c","w");
@@ -140,22 +144,26 @@ void create_parser_file(struct parser_tables_s* ptables){
     char num[4];
     c_ptr = new_code;
     c_ptr = put_out_until_token(outfile,c_ptr);
-    sscanf(num,"%d",ptables->num_states);
-    fprintf(outfile,"%d",ptables->num_states);
+    sscanf(num,"%zu",&ptables->num_states);
+    fprintf(outfile,"%zu",ptables->num_states);
     c_ptr += strlen(num);
     c_ptr = put_out_until_token(outfile,c_ptr);
-    sscanf(num,"%d",ptables->num_nonterms);
-    fprintf(outfile,"%d",ptables->num_nonterms);
+    sscanf(num,"%zu",&ptables->num_nonterms);
+    fprintf(outfile,"%zu",ptables->num_nonterms);
     c_ptr += strlen(num);
     c_ptr = put_out_until_token(outfile,c_ptr);
-    sscanf(num,"%d",ptables->num_terms);
-    fprintf(outfile,"%d",ptables->num_terms);
+    sscanf(num,"%zu",&ptables->num_terms);
+    fprintf(outfile,"%zu",ptables->num_terms);
     c_ptr += strlen(num);
 
     c_ptr = put_out_until_token(outfile,c_ptr);
     push_goto_tbl(ptables,outfile);
     c_ptr = put_out_until_token(outfile,c_ptr);
     push_action_tbl(ptables,outfile);
+    c_ptr = put_out_until_token(outfile,c_ptr);
+    push_code_sections(grammar_table,outfile);
+    c_ptr = put_out_until_token(outfile,c_ptr);
+    push_aux(grammar_table,outfile);
     c_ptr = put_out_until_token(outfile,c_ptr);
 //    if(c_ptr != NULL)printf("found a special token\n");
 }
@@ -237,7 +245,7 @@ void push_goto_tbl(struct parser_tables_s* ptable,FILE* outfile){
     strncpy(new_str,temp,sizeof(char)*strlen(temp));
     free(temp);
     temp = NULL;
-    printf("constructed GOTO table:\n %s\n",new_str);
+//    printf("constructed GOTO table:\n %s\n",new_str);
     fputs(new_str,outfile);
 }
 void push_action_tbl(struct parser_tables_s* ptable,FILE* outfile){
@@ -299,11 +307,25 @@ void push_action_tbl(struct parser_tables_s* ptable,FILE* outfile){
     //    printf("temp string so far\n%s\n",temp);
     new_str = malloc(sizeof(char)*(strlen(temp)+1));
     memset(new_str,0,strlen(temp)+1);
-    printf("actual string length of temp needed: chars: %lu\n",strlen(temp));
+ //   printf("actual string length of temp needed: chars: %lu\n",strlen(temp));
     strncpy(new_str,temp,sizeof(char)*strlen(temp));
     free(temp);
     temp = NULL;
-    printf("constructed ACTION table:\n %s\n",new_str);
+//    printf("constructed ACTION table:\n %s\n",new_str);
     fputs(new_str,outfile);
 
+}
+void push_code_sections(gr_tbl_t* grammar_table, FILE* outfile){
+    char* code;
+    code = NULL;
+    for(int e=1;e<grammar_table->used;e++){
+	   code = get_rul_code(get_rul_by_pos(grammar_table,e));
+	   if(code == NULL) continue;
+	   fprintf(outfile,"case %d:\n",e);
+	   fprintf(outfile,"%s",code);
+	   fprintf(outfile,"break;\n");
+    }
+}
+void push_aux(gr_tbl_t* grammar_table,FILE* outfile){
+    fprintf(outfile,"%s",grammar_table->aux_code);
 }
