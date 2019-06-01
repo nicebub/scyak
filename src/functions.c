@@ -45,15 +45,6 @@ int process_token(char val, char* nam,u_int8_t type,int pos,gr_tbl_t *grammar_ta
 	return temp_tok;
 }
 
-int does_tok_start_rul(tok_tbl_t* token, gr_tbl_t* in_gr_table){
-    if(!token || !in_gr_table) return 0;
-    for(int i=0;i<in_gr_table->used;i++){
-	   if(get_symb_tval(get_symb_by_pos(get_rul_by_pos(in_gr_table,i),0)) == token->tval){
-		  return 1;
-	   }
-    }
-    return 0;
-}
 
 int tok_exists(char* nam,gr_tbl_t *grammar_table){
 	for(int i=0;i<grammar_table->tokused;i++){

@@ -1,6 +1,7 @@
 #include <string.h>
 #include "stdio.h"
 #include "tables.h"
+#include "tokens.h"
 #include <stdlib.h>
 
 inline tok_tab_t* get_tok_nam(tok_tbl_t* token){
@@ -270,6 +271,15 @@ void print_tok_array(tok_tbl_t* inarray,size_t used){
 	for(int i=0;i<used;i++)
 		print_tok(&(inarray[i]));
 }
+int does_tok_start_rul(tok_tbl_t* token, gr_tbl_t* in_gr_table){
+    if(!token || !in_gr_table) return 0;
+    for(int i=0;i<in_gr_table->used;i++){
+	   if(get_symb_tval(get_symb_by_pos(get_rul_by_pos(in_gr_table,i),0)) == token->tval){
+		  return 1;
+	   }
+    }
+    return 0;
+}
 
 
 void print_symbol(symb_t * symbol){
@@ -357,7 +367,12 @@ void calculate_num_terms(gr_tbl_t * grammar_table){
 //		  printf("set terminal %s to term num %zu\n",grammar_table->tokens[i].name,grammar_table->tokens[i].termnum);
 	   }
 	   else{
-		  grammar_table->tokens[i].termnum = grammar_table->num_nonterms++;
+		  if(grammar_table->tokens[i].val != CODE)
+			 grammar_table->tokens[i].termnum = grammar_table->num_nonterms++;
+		  else if(grammar_table->tokens[i].val == CODE && does_tok_start_rul(&grammar_table->tokens[i],grammar_table)){
+			 grammar_table->tokens[i].termnum = grammar_table->num_nonterms++;
+
+		  }
 //		  printf("set nonterminal %s to nonterm num %zu\n",grammar_table->tokens[i].name,grammar_table->tokens[i].termnum);
 	   }
     }

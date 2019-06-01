@@ -52,7 +52,7 @@ extern char* yytext;
 			sprintf(temp_tok_nam,"cs%s",codenum); \
 			free(codenum); \
 			codenum=NULL; \
-			process_n_set_tval(CODE,TERMINAL,1)
+			process_n_set_tval(CODE,NONTERMINAL,1)
 
 #define add_token_decls() 		\
 							char* temp_tok_nam; \

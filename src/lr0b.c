@@ -428,78 +428,80 @@ void fill_action_table(struct parser_tables_s* ptable,gr_tbl_t* grammar_table,st
     int8_t nprec;
     rule_t* prec_rul;
     int rule,pos,in_ra;
-/*    printf("working with these tokens\n");
+    printf("working with these tokens\n");
     print_tok_array(grammar_table->tokens,grammar_table->tokused);
     printf("here are the rules again");
-    print_gr_table(grammar_table);*/
+    print_gr_table(grammar_table);
     follows = get_follow_set(canon,grammar_table);
-/*    printf("working with this follow set\n");
+   printf("working with this follow set\n");
     print_lr0_array(follows);
     printf("working with this canon\n");
     print_lr0_array(canon);
-    printf("filling action table\n");*/
-    for(int i=0;i<canon->used;i++){
+    printf("filling action table\n");
+    for(int i=0;i<canon->used;i++){  // cylce through canonical set of lr(0) items. ie states
 //	   printf("set %d out of %zu\n",i,canon->used);
-	   fset = get_set_by_pos(canon,i);
-	   for(int j=0;j<fset->used;j++){
+	   fset = get_set_by_pos(canon,i);  // current lr(0) set; state
+	   for(int j=0;j<fset->used;j++){  // all rules with productions with dots in positions in the lr(0) state
 //		  printf("symbol %d out of %lu\n",j,fset->used);
-		  litem = get_item_by_pos(fset,j);
-		  rule = get_item_rul(litem);
-		  pos = get_item_pos(litem);
-		  tem_rul = get_rul_by_pos(grammar_table,rule);
+		  litem = get_item_by_pos(fset,j); // current rule with a dot
+		  rule = get_item_rul(litem); 	//  rule we are talking about
+		  pos = get_item_pos(litem); 		// where is the dot located before what symbol
+		  tem_rul = get_rul_by_pos(grammar_table,rule);	// actual rule
 		  if(rule == 0 && pos ==2){
 //			 printf("found End of Start rule\n");
 			 ptable->ACTION[i][ptable->num_terms-1].action = ACCEPT;
 		  }
-		  tsymt = get_item_symb(litem);
-		  if(get_symb_val(tsymt) != EMPTY){
+		  tsymt = get_item_symb(litem);  // symbol dot is in front of
+		  if(get_symb_val(tsymt) != EMPTY){ // if symbol before dot is an empty {e} token or not
 //			 printf("symbol is not empty\n");
-			 tok_val = get_symb_tval(tsymt);
-			 tem_token = get_tok_by_id(grammar_table->tokens,tok_val);
-			 tok_type = get_tok_type(tem_token);
-//			 tsymt =
-//			 tsymt = get_symb_by_pos(tem_rul,pos);
+			 tok_val = get_symb_tval(tsymt); // token the symbol represents id
+			 tem_token = get_tok_by_id(grammar_table->tokens,tok_val); // that actual token
+			 tok_type = get_tok_type(tem_token); 	// type of token, terminal or nonterminal
 			 if(tok_type == TERMINAL){
 //			 	printf("found terminal %s in state set\n",get_symb_nam(tsymt));
-				gt_set = GOTO(fset,tok_val,universe_set, grammar_table);
-				in_ra = set_is_in_array(gt_set,canon);
-				ttnum = get_tok_termnum(tem_token);
-				if(in_ra != -1){
-				    if(ptable->ACTION[i][ttnum].action == AERROR){
+				gt_set = GOTO(fset,tok_val,universe_set, grammar_table); // get next state from here, ie move dot
+				in_ra = set_is_in_array(gt_set,canon); // check state exists already
+				ttnum = get_tok_termnum(tem_token); // terminal number token has been labeled
+				if(in_ra != -1){ // if we've seen this state before
+				    if(ptable->ACTION[i][ttnum].action == AERROR){ // we haven't set the state to anything yet
 //						  	printf("setting ACTION table state %d, action %d\n",in_ra,SHIFT);
-						  	ptable->ACTION[i][ttnum].state = in_ra;
-						  	ptable->ACTION[i][ttnum].action = SHIFT;
+						  	ptable->ACTION[i][ttnum].state = in_ra; // next state
+						  	ptable->ACTION[i][ttnum].action = SHIFT; // shift it
 					}
-					else{
+					else{ // we've already been here, resolve conflicts
 					    printf("possibly parsing confict, already at %d?\n",ptable->ACTION[i][ttnum].action);
-					    switch(ptable->ACTION[i][ttnum].action){
-						   case REDUCE:
+					    switch(ptable->ACTION[i][ttnum].action){ // existing action in table
+						   case REDUCE: // shift/reduce
 							  prec_rul = get_rul_by_pos(grammar_table,ptable->ACTION[i][ttnum].state);
+							  // we set state earlier to rule num we reduce by when a REDUCE action
 							  nprec = get_rul_prec(prec_rul);
-							  if(nprec == -1){
+							  // what prececdence is set for the rule
+//								 printf("rule head is a code\n");
+								 printf("symbol value of head rule is %s\n",get_symb_nam(get_symb_by_pos(prec_rul,0)));
+							  if(nprec == -1){ // rule has no precedence set, so default
 								 printf("going to default resolution techniques\n");
 								 printf("shift/reduce replacing reduce w/shift\n");
-								 ptable->ACTION[i][ttnum].state = in_ra;
-								 ptable->ACTION[i][ttnum].action = SHIFT;
+								 ptable->ACTION[i][ttnum].state = in_ra; // next state
+								 ptable->ACTION[i][ttnum].action = SHIFT; //shift action
 							  }
-							  else{
+							  else{ // rule has precedence so use it
 								 printf("using precedence and associativity rules\n");
-								 uint8_t cprec = get_tok_prec(tem_token);
-								 if(nprec < cprec){
+								 uint8_t cprec = get_tok_prec(tem_token); // precedence of incoming token
+								 if(nprec < cprec){ // incoming token higher prec so shift
 									printf("incoming token has higher precedence, shift\n");
-									ptable->ACTION[i][ttnum].state = in_ra;
-									ptable->ACTION[i][ttnum].action = SHIFT;
+									ptable->ACTION[i][ttnum].state = in_ra; // next state
+									ptable->ACTION[i][ttnum].action = SHIFT; // shift action
 								 }
-								 else if(nprec == cprec){
+								 else if(nprec == cprec){  // equal precedence, check associativity
 									printf("same precedence, checking associativity\n");
-									switch(get_rul_assoc(prec_rul)){
+									switch(get_rul_assoc(prec_rul)){ // get associativity of rule
 									    case LEFT:
 										   printf("left assoc so keeping reduce\n");
 										   break;
 									    case RIGHT:
 										   printf("right assoc so doing shift instead\n");
-										   ptable->ACTION[i][ttnum].state = in_ra;
-										   ptable->ACTION[i][ttnum].action = SHIFT;
+										   ptable->ACTION[i][ttnum].state = in_ra; // next state
+										   ptable->ACTION[i][ttnum].action = SHIFT; // shift action
 										   break;
 									    case NONASSOC:
 										   printf("nonassoc, shouldn't have conflict error\n");
@@ -529,46 +531,46 @@ void fill_action_table(struct parser_tables_s* ptable,gr_tbl_t* grammar_table,st
 				}
 			 }
 		  }
-		  else{
+		  else{ // symbol before dot is an empty {e} token
 			 struct lr0_set* fset;
-	//		 tok_val = get_symb_tval(tsymt);
-	//		 tem_token = get_tok_by_id(grammar_table->tokens,tok_val);
-	//		 tok_type = get_tok_type(tem_token);
-	//		 exrul = get_rul_by_pos(grammar_table,rule);
-			 hed_o_rl_symb = get_symb_by_pos(tem_rul,0);
-			 
-			 if(pos == tem_rul->used){
-//				printf("found the end of rule empty string\n");
-				hd_o_rl_tvl = get_symb_tval(hed_o_rl_symb);
-				fset = get_set_by_pos(follows,hd_o_rl_tvl);
-				if(hd_o_rl_tvl !=0){
-				    for(int b=0;b<fset->used;b++){
-//					   	printf("going through follow array of %s, symbol %d\n",get_symb_nam(hed_o_rl_symb),b);
-					   qitem = get_item_by_pos(fset,b);
+			 hed_o_rl_symb = get_symb_by_pos(tem_rul,0);  // head of rule symbol we want to reduce by
+			 printf("head of rule symbol %s\n",get_symb_nam(hed_o_rl_symb));
+			 if(pos == tem_rul->used){ // is the dot located at the end of the rule already
+				printf("found the end of rule empty string\n");
+				hd_o_rl_tvl = get_symb_tval(hed_o_rl_symb); // token index of head grammar symbol of rule
+				fset = get_set_by_pos(follows,hd_o_rl_tvl); // what tokens can follow the nonterminal head symbol
+				if(hd_o_rl_tvl !=0){ // this isn't S' which we already dealt with
+				    for(int b=0;b<fset->used;b++){ // each token that can follow the nonterm head grammar symbol
+					   	printf("going through follow array of %s, symbol %d\n",get_symb_nam(hed_o_rl_symb),b);
+					   qitem = get_item_by_pos(fset,b); // get a token that follows
 					   tok_tbl_t* lastok;
-					   lastok = get_item_tok(qitem);
-					   thetnum = get_tok_termnum(lastok);
-					   	if(get_item_pos(qitem) != DOLLAR){
-						    using_index = thetnum;
+					   lastok = get_item_tok(qitem); // actual token
+					   thetnum = get_tok_termnum(lastok); // the terminal number of this token
+					   	if(get_item_pos(qitem) != DOLLAR){ // if what follows this symbol cant be the end
+						    printf("not DOLLAR sign its %d\n",get_item_pos(qitem));
+						    using_index = thetnum; // use the current token we are talking about still
 				    		}
-				    		else{
-//						    printf("found DOLLAR SIGN\n");
+				    		else{ // we found the end so the terminal used is the last one which is DOLLAR
+						    printf("found DOLLAR SIGN\n");
 						    using_index = ptable->num_terms-1;
 				    		}
-					   if(ptable->ACTION[i][using_index].action == AERROR){
-//						  printf("setting ACTION table to REDUCE %d by rule %d to state %zu num symbols to pop %lu\n",REDUCE,rule,hd_o_rl_tvl,tem_rul->used-1);
-						  ptable->ACTION[i][using_index].action = REDUCE;
-						  ptable->ACTION[i][using_index].state = rule;
+					   if(ptable->ACTION[i][using_index].action == AERROR){ // have we set this one before
+						  printf("setting ACTION table to REDUCE %d by rule %d to state %zu num symbols to pop %lu\n",REDUCE,rule,hd_o_rl_tvl,tem_rul->used-1);
+						  ptable->ACTION[i][using_index].action = REDUCE; // reduce action
+						  ptable->ACTION[i][using_index].state = rule; // set state to be rule we reduce by
 						  ptable->ACTION[i][using_index].rule = get_tok_termnum(get_tok_by_id(grammar_table->tokens,hd_o_rl_tvl));
+						  // set the rule to the head of the rules nonterminal number
 						  ptable->ACTION[i][using_index].numtoks = tem_rul->used-1;
+						  // how many tokens to reduce by
 					   }
-					   else{
+					   else{ // we've been here before so conflict to resolve
 						  printf("possibly parsing confict?\n");
-							 switch(ptable->ACTION[i][using_index].action){
+							 switch(ptable->ACTION[i][using_index].action){ //check existing action in table
 								case REDUCE:
 								    printf("going to default resolution techniques\n");
 								    printf("reduce/reduce\n");
-								    if(ptable->ACTION[i][using_index].state > rule){
+									   printf("symbol value of head rule is %d\n",get_symb_val(hed_o_rl_symb));
+								    if(ptable->ACTION[i][using_index].state > rule){ // which rule came first
 									   printf("replacing action from earlier rule\n");
 									   ptable->ACTION[i][using_index].action = REDUCE;
 									   ptable->ACTION[i][using_index].state = rule;
@@ -578,24 +580,24 @@ void fill_action_table(struct parser_tables_s* ptable,gr_tbl_t* grammar_table,st
 //								ptable->ACTION[i][using_index].state = in_ra;
 //								ptable->ACTION[i][using_index].action = SHIFT;
 								    break;
-								default:
+								default: // ACTION
 								    prec_rul = get_rul_by_pos(grammar_table,ptable->ACTION[i][using_index].state);
-								    nprec = get_rul_prec(prec_rul);
-								    if( nprec == -1 ){
+								    //  rule in table reducing by already
+								    nprec = get_rul_prec(prec_rul); // precedence of that rule
+									   printf("symbol value of head rule is %d\n",get_symb_val(hed_o_rl_symb));
+								    if( nprec == -1 ){ // we haven't set precedence yet so default
 									   	printf("shift/reduce, keeping existing shift\n");
 								    }
-								    else{
+								    else{ // we did so use precedence and associativity
 									   printf("using precedence and associativity rules\n");
 /* */
-									   uint8_t cprec = get_tok_prec(lastok);
-									   if(nprec < cprec){
+									   uint8_t cprec = get_tok_prec(lastok); //precedence of icoming tok
+									   if(nprec < cprec){ // incoming higher, keep shifting
 										  printf("incoming token has higher precedence, keeping shift\n");
-//										  ptable->ACTION[i][using_index].state = in_ra;
-//										  ptable->ACTION[i][using_index].action = SHIFT;
 									   }
-									   else if(nprec == cprec){
+									   else if(nprec == cprec){ // same use associativity
 										  printf("same precedence, checking associativity\n");
-										  switch(get_rul_assoc(prec_rul)){
+										  switch(get_rul_assoc(prec_rul)){ // get assoc of the rule
 											 case LEFT:
 												printf("left assoc so reducing\n");
 												ptable->ACTION[i][using_index].action = REDUCE;
@@ -616,40 +618,75 @@ void fill_action_table(struct parser_tables_s* ptable,gr_tbl_t* grammar_table,st
 												break;
 										  }
 									   }
-									   else{
+									   else{ // existing rule in table has higher precdence
 										  printf("left token has higher precedence, reducing\n");
 										  ptable->ACTION[i][using_index].action = REDUCE;
 										  ptable->ACTION[i][using_index].state = rule;
 										  ptable->ACTION[i][using_index].rule = get_tok_termnum(get_tok_by_id(grammar_table->tokens,hd_o_rl_tvl));
 										  ptable->ACTION[i][using_index].numtoks = tem_rul->used-1;
 									   }
-
-	/* */							    }
+								    }
 								    break;
 							 }
-//						  exit(EXIT_FAILURE);
+						  
 					   }
-
 				    }
+				}
+			 }
+			 else{
+				printf("empty not at end of rule. if this is code then we can reduce\n");
+				fset = get_set_by_pos(canon,i);  // current lr(0) set;
+				tok_val = get_symb_tval(tsymt); // token the symbol represents id
+				tem_token = get_tok_by_id(grammar_table->tokens,tok_val); // that actual token
+				tok_type = get_tok_type(tem_token); 	// type of token, terminal or nonterminal
+				    printf("found terminal %s in state set\n",get_symb_nam(tsymt));
+				    gt_set = GOTO(fset,tok_val,universe_set, grammar_table);
+				print_lr0_set(gt_set);
+				    // get next state from here, ie move dot
+				in_ra = set_is_in_array(gt_set,canon); // check state exists already
+				ttnum = get_tok_termnum(tem_token); // terminal number token has been labeled
+				hed_o_rl_symb = get_symb_by_pos(tem_rul,0);  // head of rule symbol we want to reduce by
+				hd_o_rl_tvl = get_symb_tval(hed_o_rl_symb); // token index of head grammar symbol of rule
+					if(in_ra != -1){ // if we've seen this state before
+				    for(int f=0;f<grammar_table->num_terms+1;f++){
+					   if(ptable->ACTION[i][f].action == AERROR){ // we haven't set the state to anything yet
+						  //						  	printf("setting ACTION table state %d, action %d\n",in_ra,SHIFT);
+						  ptable->ACTION[i][f].action = STALL;
+						  ptable->ACTION[i][f].state = in_ra;
+/*
+						  ptable->ACTION[i][f].action = REDUCE;
+						  ptable->ACTION[i][f].state = rule;
+						  ptable->ACTION[i][f].rule = get_tok_termnum(get_tok_by_id(grammar_table->tokens,hd_o_rl_tvl));
+						  ptable->ACTION[i][f].numtoks = tem_rul->used-1;
+*/
+					   }
+					   else{ // we've already been here, resolve conflicts
+						  printf("from empty possibly parsing confict, already at %d?\n",ptable->ACTION[i][f].action);
+					   }
+				    }
+				}
+				else{
+				    printf("error, found a goto set that we didn't find earlier??\n");
+				    exit(EXIT_FAILURE);
 				}
 			 }
 		  }
 	   }
     }
-    for(int m=0;m<grammar_table->tokused-1;m++){
+    for(int m=0;m<grammar_table->tokused;m++){ // used to be tokused-1 .. should it be again?
 	   rttok = get_tok_by_id(grammar_table->tokens,m);
 //	   printf("GOTO table construction with symbol %d\n",m);
-	   if(get_tok_type(rttok) == NONTERMINAL){
+	   if(get_tok_type(rttok) == NONTERMINAL && does_tok_start_rul(rttok,grammar_table)){
 //		  printf("symbol is a nonterminal, continuing\n");
-		  for(int h=0;h<canon->used;h++){
-			 hset = get_set_by_pos(canon,h);
+		  for(int h=0;h<canon->used;h++){ // for every state
+			 hset = get_set_by_pos(canon,h); // get the current state looking at
 //			 printf("going through states, on %d\n",h);
-			 gt_set = GOTO(hset,get_tok_tval(rttok),universe_set, grammar_table);
-			 in_ra = set_is_in_array(gt_set,canon);
-			 if(in_ra != -1){
-				termval = get_tok_termnum(rttok);
+			 gt_set = GOTO(hset,get_tok_tval(rttok),universe_set, grammar_table); // what follows this nonterm
+			 in_ra = set_is_in_array(gt_set,canon); // make sure the state already exists
+			 if(in_ra != -1){ // we found the state
+				termval = get_tok_termnum(rttok); // get the nonterm number
 //				printf("found GOTO before, which is good, so setting in GOTO table %d %zu to %d\n",h,termval,in_ra);
-				ptable->GTTBL[h][termval] = in_ra;
+				ptable->GTTBL[h][termval] = in_ra; // for that nonterm make the state the goto state
 			 }
 		  }
 	   }

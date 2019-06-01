@@ -3,16 +3,21 @@
 #include <string.h>
 #include <stdlib.h>
 #include "lr0b.h"
-#include "tokens.h"
+//#include "tokens.h"
+#0#
 #define NUM_STATES #0#
 #define NUM_NONTERMS #0#
 #define NUM_TERMS #0#
 #define SCSTYPE int
 void run_parser(void);
-int mlexer(FILE* thefile);
+extern int sclex(FILE* thefile);
 void run_code(int state);
+int translate(int tokn);
 
 char lex_text[128];
+
+const static int8_t tok_trans_tbl[NUM_TERMS] = #0#;
+
 void run_parser(void){
     u_int8_t stack[100];
 	SCSTYPE values[100];
@@ -35,16 +40,26 @@ void run_parser(void){
 	   perror("Error");
 	   exit(EXIT_FAILURE);
     }
-    tokn = mlexer(thefile);
+    tokn = (sclex(thefile));
+	if(tokn == -1)
+		tokn = NUM_TERMS-1;
     printf("token %d\n",tokn);
     while(1){
 	   printf("currently in state %d\n",*top);
 	   switch(ACTION[*top][tokn].action){
+		  case STALL:
+			 printf("stalling\n");
+			 top++;
+			 *top = ACTION[*(top-1)][tokn].state;
+			 break;
 		  case SHIFT:
 			    printf("shifting\n");
 			    top++;
 			    *top = ACTION[*(top-1)][tokn].state;
-			    tokn = mlexer(thefile);
+			    tokn = (sclex(thefile));
+				if(tokn == -1)
+					tokn = NUM_TERMS-1;
+			 	printf("token %d\n",tokn);
 			    break;
 		  case REDUCE:
 			    printf("reducing\n");
@@ -61,6 +76,7 @@ void run_parser(void){
 			    break;
 		  default:
 			    printf("parsing error: found error as value in table\n");
+			    printf("token %d\n",tokn);
 			    exit(EXIT_FAILURE);
 	   }
     }
@@ -71,7 +87,7 @@ pender:
     thefile = NULL;
     file_to_parse = NULL;
 }
-
+/*
 int mlexer(FILE* thefile){
     int rchar;
     char * ident;
@@ -130,6 +146,7 @@ int mlexer(FILE* thefile){
     }
     return 5;
 }
+ */
 inline void run_code(int state){
     switch(state){
 		#0#
@@ -138,6 +155,17 @@ inline void run_code(int state){
 			break;
 		
     }
+}
+int translate(int tokn){
+    printf("translating token val\n");
+	   for(int a=0;a<NUM_TERMS;a++){
+		  if(tok_trans_tbl[a] == tokn){
+			 printf("found token %d as %d\n",tokn,a);
+			 return a;
+		  }
+	   }
+    printf("didn't find token val %d returning itself\n",tokn);
+    return tokn;
 }
 
 #0#

@@ -121,6 +121,7 @@ char* get_symb_code(symb_t* symbol);
 /* end symbol methods */
 
 /* rule */
+int does_tok_start_rul(tok_tbl_t* token, gr_tbl_t* in_gr_table);
 rule_t * create_grrul(tok_tab_t* name, size_t size);
 void add_symb_to_rule(rule_t* rule,symb_t * symbol);
 void set_rul_code(rule_t* rule, char* code);
