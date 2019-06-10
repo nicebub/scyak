@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "tokens.h"
 #include "parser.h"
 #include "spcread.h"
@@ -728,6 +729,26 @@ char* process_codeblock(FILE* specfile,rule_t* temp_rules){
     while(1){
 //	   printf("character working with %c\n",c);
 	   switch(c){
+		  case '$':
+			 r = fgetc(specfile);
+			 if(r =='$'){
+				strcat(defcode,"vtop[0]");
+				code_head += strlen("vtop[0]");
+			 }
+			 else if(isdigit(r)){
+				uint cdnum = '\0';
+				char rstr[10] = { '\0' };
+				ungetc(r,specfile);
+				fscanf(specfile,"%u",&cdnum);
+				sprintf(rstr,"vtop[%u]",(cdnum-1));
+				strcat(defcode,rstr);
+				code_head += strlen(rstr);
+			 }
+			 else{
+				ungetc(r,specfile);
+				goto con_proc;
+			 }
+			 break;
 		  case '%':
 			 r = fgetc(specfile);
 			 if(r == '%'){
@@ -736,6 +757,7 @@ char* process_codeblock(FILE* specfile,rule_t* temp_rules){
 			 }
 			 ungetc(r,specfile);
 		  case '\\':
+	  con_proc:
 			 char_to_code(&c,&code_head,&def_used,&def_sz,&defcode);
 			 c=fgetc(specfile);
 			 goto addchar;

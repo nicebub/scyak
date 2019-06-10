@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "buffer.h"
+//extern FILE* scin;
 /* Function Prototype
 
 	int sclex(FILE* infile);
@@ -159,10 +160,13 @@ int is_in_final_states(int scl_state);
 	 char sctext[100];
 	 /* The length of the matched lexeme to the regular expression pattern */
 	 static int scleng;
+	 FILE* scin = NULL;
 
 	 /* As defined above */
 int sclex(FILE* scl_infile){
-	
+	if(!scin){
+		scin = fopen("/dev/stdin","r");
+	}
 	 char *scl_endmatch;
 	 /*
 	 accepted = tells whether we have moved into an accept state
@@ -187,7 +191,7 @@ dstart:
 	 scl_last = scl_s;
 	 /* only call and initialize buffer once */
 	 if(scl_dbuf == NULL)
-		 scl_dbuf = buffer_from_file(scl_infile);
+		 scl_dbuf = buffer_from_file(scin);
 	 /* point to back buffer pointer to keep track of fully found lexeme during
 	 	parsing algorithm */
 	 scl_endmatch = scl_dbuf->back;
@@ -249,11 +253,13 @@ dstart:
 								break;
 							case 2:
 								{
+//	yylval = sctext;
 	return IDENT;
 }
 								break;
 							case 3:
 								{
+	yylval = atoi(sctext);
 	return INTEGER;
 }
 								break;

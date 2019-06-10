@@ -6,11 +6,11 @@ This is the main file of the parser generator. This wrapper will call
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "init.h"
 #include "lr0b.h"
 #include "spcread.h"
 #include "parser.h"
-#include <string.h>
 //#include "outfile.in"
 //#include "run_parser.h"
 
@@ -27,6 +27,7 @@ void push_code_sections(gr_tbl_t* grammar_table,FILE* outfile);
 void push_aux(gr_tbl_t* grammar_table,FILE* outfile);
 void push_trans_tbl(gr_tbl_t* grammar_table,FILE* outfile);
 void push_term_defs(gr_tbl_t* grammar_table,FILE* outfile);
+void push_def_sect(gr_tbl_t* grammar_table, FILE* outfile);
 
 static int outputh;
 int main(int argc, char ** argv){
@@ -160,6 +161,7 @@ void create_parser_file(gr_tbl_t* grammar_table){
     char num[4];
     c_ptr = new_code;
     c_ptr = put_out_until_token(outfile,c_ptr);
+    push_def_sect(grammar_table,outfile);
     if(outputh){
 	   fprintf(outfile,"#include \"scy.tab.h\"\n");
     }
@@ -229,6 +231,10 @@ char* put_out_until_token(FILE* outfile,char* new_code){
     }
     return NULL;
 
+}
+void push_def_sect(gr_tbl_t* grammar_table, FILE* outfile){
+    if(grammar_table->def_code)
+	   	fprintf(outfile,"%s",grammar_table->def_code);
 }
 void push_trans_tbl(gr_tbl_t* grammar_table,FILE* outfile){
     char* temp;

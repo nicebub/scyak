@@ -1,7 +1,7 @@
-#include "functions.h"
-#include "tokens.h"
 #include <stddef.h>
 #include <stdlib.h>
+#include "functions.h"
+#include "tokens.h"
 u_int8_t prec_count;
 int process_token(char val, char* nam,u_int8_t type,int pos,gr_tbl_t *grammar_table){
     size_t newsz;

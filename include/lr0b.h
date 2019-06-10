@@ -2,11 +2,11 @@
 #define LR0B_H
 #include "lr0.h"
 
-#define SHIFT 0
-#define REDUCE 1
-#define ACCEPT 2
-#define AERROR 3
-#define STALL 4
+#define SHIFT 1
+#define REDUCE 2
+#define ACCEPT 4
+#define AERROR 8
+#define STALL 15
 
 struct action_s
 {

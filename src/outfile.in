@@ -1,72 +1,89 @@
-#include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "lr0b.h"
-//#include "tokens.h"
+struct action_s
+{
+    u_int8_t state;
+    u_int8_t action;
+    u_int8_t rule;
+    u_int8_t numtoks;
+};
+
+struct parser_tables_s
+{
+    size_t num_states;
+    size_t num_terms;
+    size_t num_nonterms;
+    struct action_s ** ACTION;
+    int ** GTTBL;
+};
 #0#
+#define SHIFT 1
+#define REDUCE 2
+#define ACCEPT 4
+#define AERROR 8
+#define STALL 15
 #define NUM_STATES #0#
 #define NUM_NONTERMS #0#
 #define NUM_TERMS #0#
+#ifndef SCSTYPE
 #define SCSTYPE int
-void run_parser(void);
+#endif
+void scparse(void);
 extern int sclex(FILE* thefile);
 void run_code(int state);
-int translate(int tokn);
-
-char lex_text[128];
-
+//int translate(int tokn);
+static SCSTYPE yylval;
+ FILE* scin2;
+/*
 const static int8_t tok_trans_tbl[NUM_TERMS] = #0#;
-
-void run_parser(void){
-    u_int8_t stack[100];
-	SCSTYPE values[100];
+ */
+const static int GTTBL[NUM_STATES][NUM_NONTERMS] = #0#;
+const static struct action_s ACTION[NUM_STATES][NUM_TERMS] = #0#;
+static u_int8_t stack[100];
+static SCSTYPE values[100];
+static u_int8_t* top = &stack[0];
+static SCSTYPE* vtop = &values[0];
+void scparse(void){
     memset(stack,0,sizeof(u_int8_t)*100);
     memset(values,0,sizeof(SCSTYPE)*100);
-    register u_int8_t* top = &stack[0];
-	register SCSTYPE* vtop = &values[0];
-    char* file_to_parse;
-    FILE* thefile;
+//    memset(yylval,0,sizeof(SCSTYPE)*100);
     register int tokn;
     register int ntindex;
-    const static int GTTBL[NUM_STATES][NUM_NONTERMS] = #0#;
-    const static struct action_s ACTION[NUM_STATES][NUM_TERMS] = #0#;
-    file_to_parse = malloc(sizeof(char)*128);
-    memset(file_to_parse,0,sizeof(char)*128);
-    
-    printf("input filename to parse\n");
-    scanf("%s",file_to_parse);
-    if((thefile = fopen(file_to_parse,"r")) == NULL){
-	   perror("Error");
-	   exit(EXIT_FAILURE);
-    }
-    tokn = (sclex(thefile));
+    tokn = (sclex(scin2));
 	if(tokn == -1)
 		tokn = NUM_TERMS-1;
-    printf("token %d\n",tokn);
+//    printf("token %d\n",tokn);
     while(1){
-	   printf("currently in state %d\n",*top);
+//	   printf("currently in state %d\n",*top);
 	   switch(ACTION[*top][tokn].action){
 		  case STALL:
-			 printf("stalling\n");
+//			 printf("stalling\n");
 			 top++;
+			 vtop++;
 			 *top = ACTION[*(top-1)][tokn].state;
 			 break;
 		  case SHIFT:
-			    printf("shifting\n");
+//			    printf("shifting\n");
 			    top++;
+			    vtop++;
 			    *top = ACTION[*(top-1)][tokn].state;
-			    tokn = (sclex(thefile));
+			 	memcpy(&vtop[0],&yylval,sizeof(SCSTYPE));
+//			    *vtop = yylval;
+			    tokn = (sclex(scin2));
 				if(tokn == -1)
 					tokn = NUM_TERMS-1;
-			 	printf("token %d\n",tokn);
+//			 	printf("token %d\n",tokn);
 			    break;
 		  case REDUCE:
-			    printf("reducing\n");
-			 	run_code(ACTION[(*top)][tokn].state);
+//			    printf("reducing\n");
+			 	vtop = vtop - (ACTION[*top][tokn].numtoks-1);
+			 	goto run_code;
+		  comeback:
+			 	//run_code(ACTION[(*top)][tokn].state);
 			    ntindex = ACTION[(*top)][tokn].rule;
-			    printf("reduced by some production %d and head production %d num tokens %d\n",ACTION[*(top)][tokn].state,
-					 ACTION[*(top)][tokn].rule,ACTION[*(top)][tokn].numtoks);
+//			    printf("reduced by some production %d and head production %d num tokens %d\n",ACTION[*(top)][tokn].state,
+//					 ACTION[*(top)][tokn].rule,ACTION[*(top)][tokn].numtoks);
 			    top = top - (ACTION[*top][tokn].numtoks-1);
 			    *top = GTTBL[*(top-1)][ntindex];
 			    break;
@@ -80,82 +97,22 @@ void run_parser(void){
 			    exit(EXIT_FAILURE);
 	   }
     }
+run_code:
+    switch(ACTION[(*top)][tokn].state){
+		  #0#
+		  default:
+//			 printf("reduced by rule %d\n",ACTION[(*top)][tokn].state);
+//		  memcpy(&vtop[0],&vtop[1],sizeof(SCSTYPE));
+//			 vtop[0] = vtop[1];
+			 break;
+			 
+    }
+    goto comeback;
 pender:
     printf("ending parser\n");
-    fclose(thefile);
-    free(file_to_parse);
-    thefile = NULL;
-    file_to_parse = NULL;
+//    fclose(fd);
 }
 /*
-int mlexer(FILE* thefile){
-    int rchar;
-    char * ident;
-    char * idtemp;
-    idtemp = ident = NULL;
-    rchar = fgetc(thefile);
-    while(rchar != EOF){
-	   switch(rchar){
-		  case -1:
-			 printf("found EOF or '$'\n");
-			 return 5;
-		  case '+':
-			 printf("found +\n");
-			 return 0;
-			 break;
-		  case '*':
-			 printf("found *\n");
-			 return 1;
-			 break;
-		  case '(':
-			 printf("found (\n");
-			 return 2;
-			 break;
-		  case ')':
-			 printf("found )\n");
-			 return 3;
-			 break;
-		  case '\n':
-		  case '\t':
-		  case ' ':
-		  case '\r':
-		  case '\f':
-			 printf("found ws\n");
-			 break;
-		  default:
-			 if(isalpha(rchar)|| rchar=='_'){
-				printf("found id\n");
-				ungetc(rchar,thefile);
-				idtemp = malloc(sizeof(char)*128);
-				memset(idtemp,0,sizeof(char)*128);
-				fscanf(thefile,"%s",idtemp);
-				ident = malloc(sizeof(char)*strlen(idtemp)+1);
-				memset(ident,0,sizeof(char)*strlen(idtemp)+1);
-				strncpy(ident,idtemp,sizeof(char)*strlen(idtemp));
-				memset(lex_text,0,sizeof(char)*128);
-				strncpy(lex_text,ident,sizeof(char)*strlen(ident));
-				return 4;
-			 }
-			 else{
-				printf("Character not allowed in the language %c\n",rchar);
-				exit(EXIT_FAILURE);
-			 }
-	   }
-	   rchar = fgetc(thefile);
-
-    }
-    return 5;
-}
- */
-inline void run_code(int state){
-    switch(state){
-		#0#
-		default:
-			printf("reduced by rule %d\n",state);
-			break;
-		
-    }
-}
 int translate(int tokn){
     printf("translating token val\n");
 	   for(int a=0;a<NUM_TERMS;a++){
@@ -167,5 +124,5 @@ int translate(int tokn){
     printf("didn't find token val %d returning itself\n",tokn);
     return tokn;
 }
-
+*/
 #0#

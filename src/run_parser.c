@@ -1,8 +1,8 @@
 #include <ctype.h>
 #include <stdio.h>
+#include <string.h>
 #include "run_parser.h"
 #include "lr0b.h"
-#include <string.h>
 #include "tokens.h"
 char lex_text[128];
 void run_parser(struct parser_tables_s* ptable){

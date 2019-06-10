@@ -1,6 +1,6 @@
+#include <stdio.h>
 #include "lr0b.h"
 #include "lr0.h"
-#include <stdio.h>
 #include "bitset.c"
 #include "functions.h"
 #include "tokens.h"

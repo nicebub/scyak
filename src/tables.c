@@ -1,8 +1,8 @@
 #include <string.h>
-#include "stdio.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include "tables.h"
 #include "tokens.h"
-#include <stdlib.h>
 
 inline tok_tab_t* get_tok_nam(tok_tbl_t* token){
     if(!token) return NULL;
