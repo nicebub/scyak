@@ -125,8 +125,8 @@ inline int tokenize(FILE* spec_file){
 //				printf("found ws\n");
 				break;
 			 default:
-				if(isalnum(rchar)|| rchar=='_'){
-				    if(!isnumber(rchar)){
+				if(isalnum(rchar)|| rchar=='_' || rchar=='-'){
+				    if(!isnumber(rchar) && rchar!='-'){
 //					   printf("found id\n");
 					   ungetc(rchar,spec_file);
 					   idtemp = malloc(sizeof(char)*LEX_MX_STR_LEN);
@@ -137,6 +137,10 @@ inline int tokenize(FILE* spec_file){
 					   strncpy(ident,idtemp,sizeof(char)*strlen(idtemp));
 					   memset(sclex_text,0,sizeof(char)*LEX_MX_STR_LEN);
 					   if(ident[strlen(idtemp)-1]==':'){
+						  if(!strcmp("error:",ident)){
+							 printf("Error: error token cannot start a grammar rule\n");
+							 exit(EXIT_FAILURE);
+						  }
 //						  printf("found a C_IDENT %s\n",ident);
 						  strncpy(sclex_text,ident,sizeof(char)*strlen(ident));
 //						  printf("sc_text is %s\n",sclex_text);

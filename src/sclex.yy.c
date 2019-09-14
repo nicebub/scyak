@@ -3,9 +3,9 @@
 	-- TO MAKE CHANGES TO THIS FILE PLEASE SEE THE DEVELOPER DOCUMENTATION AND SOURCE CODE --
 
 	Lexer Generated from the Lexical Analyzer Generator - sclex */
+#include "buffer.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include "buffer.h"
 //extern FILE* scin;
 /* Function Prototype
 
@@ -67,91 +67,40 @@ int is_in_final_states(int scl_state);
 /* alphabet size, number of states of the DFA, accept_size defines the
  number of final states that we accept on, num_regex defines the number
  of actual regular expressions the DFA recognizes */
-#define scl_asize 70 						//dfa->alphabet->used
-#define scl_tsize 6						//dfa->num_states
+#define scl_asize 19 						//dfa->alphabet->used
+#define scl_tsize 7						//dfa->num_states
 #define scl_accept_size 5					//dfa->Fstates->used
 #define scl_num_regex 4					//dfa->num_re
 	 /* The alphabet array */
-	 const static char scl_al[scl_asize] = { '\t', '\n', ' ', '(', ')', '*', '+', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '_', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'	};
+	 const static char scl_al[scl_asize] = { '\n', ' ', '(', ')', '*', '+', '-', '.', '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'	};
 	 /* The DFA movement table */
-	 const static int scl_table[scl_asize][scl_tsize] = {  {2,2,-1,-1,-1,-1},
-{2,2,-1,-1,-1,-1},
-{2,2,-1,-1,-1,-1},
-{3,-1,-1,-1,-1,-1},
-{3,-1,-1,-1,-1,-1},
-{3,-1,-1,-1,-1,-1},
-{3,-1,-1,-1,-1,-1},
-{4,-1,-1,-1,5,6},
-{5,-1,-1,-1,5,6},
-{5,-1,-1,-1,5,6},
-{5,-1,-1,-1,5,6},
-{5,-1,-1,-1,5,6},
-{5,-1,-1,-1,5,6},
-{5,-1,-1,-1,5,6},
-{5,-1,-1,-1,5,6},
-{5,-1,-1,-1,5,6},
-{5,-1,-1,-1,5,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6},
-{6,-1,-1,-1,-1,6}
+	 const static int scl_table[scl_asize][scl_tsize] = {  {2,-1,-1,-1,-1,-1,-1},
+{3,-1,-1,-1,-1,-1,-1},
+{4,-1,-1,-1,-1,-1,-1},
+{4,-1,-1,-1,-1,-1,-1},
+{4,-1,-1,-1,-1,-1,-1},
+{4,-1,-1,-1,-1,-1,-1},
+{4,-1,-1,-1,-1,-1,-1},
+{5,-1,-1,-1,-1,7,-1},
+{4,-1,-1,-1,-1,-1,-1},
+{6,-1,-1,-1,7,6,7},
+{6,-1,-1,-1,7,6,7},
+{6,-1,-1,-1,7,6,7},
+{6,-1,-1,-1,7,6,7},
+{6,-1,-1,-1,7,6,7},
+{6,-1,-1,-1,7,6,7},
+{6,-1,-1,-1,7,6,7},
+{6,-1,-1,-1,7,6,7},
+{6,-1,-1,-1,7,6,7},
+{6,-1,-1,-1,7,6,7}
  };
 	 /* Final states array - what states we accept on */
-	 const static int scl_accepted[scl_accept_size] = {  2,3,4,5,6 };
+	 const static int scl_accepted[scl_accept_size] = {  2,3,4,6,7 };
 	 /* which regular expression is attached to which accepting states */
-	 const static int scl_each_re_accepted[scl_num_regex][scl_accept_size] = { {2},
-{3},
-{6},
-{4,5}
+	 const static int scl_each_re_accepted[scl_num_regex][scl_accept_size] = { {3},
+{6,7},
+{2},
+{4}
  };
 	 /* The buffer we use to buffer the input file */
 	 static buffer * scl_dbuf; 
@@ -165,7 +114,7 @@ int is_in_final_states(int scl_state);
 	 /* As defined above */
 int sclex(FILE* scl_infile){
 	if(!scin){
-		scin = fopen("/dev/stdin","r");
+		scin = stdin;
 	}
 	 char *scl_endmatch;
 	 /*
@@ -234,10 +183,15 @@ dstart:
 						/* Below we run the user-defined code */
 						switch(n){
 							case 0:
-								{
-}
+								{ }
 								break;
 							case 1:
+								{ sscanf(sctext, "%lf",&yylval); return NUMBER;}
+								break;
+							case 2:
+								{ return NEWLINE; }
+								break;
+							case 3:
 								{
 	switch(sctext[0]){
 		case '*':
@@ -248,19 +202,11 @@ dstart:
 			return RPAREN;
 		case '(':
 			return LPAREN;
+		case '-':
+			return MINUS;
+		case '/':
+			return DIV;
 	}
-}
-								break;
-							case 2:
-								{
-//	yylval = sctext;
-	return IDENT;
-}
-								break;
-							case 3:
-								{
-	yylval = atoi(sctext);
-	return INTEGER;
 }
 								break;
 							}

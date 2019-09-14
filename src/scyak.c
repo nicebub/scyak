@@ -31,9 +31,11 @@ void push_def_sect(gr_tbl_t* grammar_table, FILE* outfile);
 
 static int outputh;
 int main(int argc, char ** argv){
+	int nousage;
 	char option;
 	FILE* spec_file;
     	outputh=0;
+	nousage=0;
 	if(argc <2){
 		usage();
 		exit(EXIT_FAILURE);
@@ -42,6 +44,7 @@ int main(int argc, char ** argv){
 		while((option = getopt(argc,argv,"dhuvV")) != -1){
 			switch(option){
 				case 'v':	version();
+						nousage=1;
 							break;
 				case 'h':
 				case 'u':	usage();
@@ -64,6 +67,7 @@ int main(int argc, char ** argv){
 		open spec file
 	*/
 	if(!argv[0]){
+		if(nousage) exit(EXIT_SUCCESS);
 		usage();
 		exit(EXIT_FAILURE);
 	}

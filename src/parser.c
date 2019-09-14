@@ -379,6 +379,11 @@ int identcombo(int typ_tok,FILE* specfile){
 
 		   if(current_tok == INTEGER){
 			  /* next input token is NUMBER then */
+			  if(atoi(cur_text) < 0){
+				 printf("Error: Token values must be an integer 0 or greater\n");
+				 printf("%s %d\n",get_tok_by_id(grammar_table->tokens,new_tok_val)->name,atoi(cur_text));
+				 exit(EXIT_FAILURE);
+			  }
 			  ndx = grammar_table->tokused-1;
 			  ttok = get_tok_by_id(grammar_table->tokens,ndx);
 			  tval = get_tok_val(ttok);
